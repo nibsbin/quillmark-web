@@ -1,0 +1,19 @@
+{
+  "name": "quillmark-web",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "vite": "^7.1.9"
+  },
+  "dependencies": {
+    "@quillmark-test/fixtures": "^0.0.31",
+    "@quillmark-test/wasm": "^0.0.31"
+  }
+}
