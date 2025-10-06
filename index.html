@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USAF Memo Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+        }
+
+        header {
+            background: #1a1a2e;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .editor-panel, .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            color: #495057;
+            letter-spacing: 0.5px;
+        }
+
+        .render-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .render-btn:hover {
+            background: #0056b3;
+        }
+
+        .render-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            resize: none;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            outline: none;
+        }
+
+        .preview-content {
+            flex: 1;
+            overflow: auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background: #fafafa;
+        }
+
+        .preview-content svg {
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            background: white;
+        }
+
+        .loading, .error {
+            padding: 2rem;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .error {
+            color: #dc3545;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎖️ USAF Memo Playground</h1>
+    </header>
+    
+    <div class="container">
+        <div class="editor-panel">
+            <div class="panel-header">
+                <span class="panel-title">Markdown Editor</span>
+                <button class="render-btn" id="renderBtn">Render SVG</button>
+            </div>
+            <textarea id="editor" placeholder="Loading template..."></textarea>
+        </div>
+        
+        <div class="preview-panel">
+            <div class="panel-header">
+                <span class="panel-title">SVG Preview</span>
+            </div>
+            <div class="preview-content" id="preview">
+                <div class="loading">Initializing</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/main.js"></script>
+</body>
+</html>

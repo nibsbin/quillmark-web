@@ -1,16 +1,20 @@
 {
   "name": "quillmark-web",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "description": "",
+  "license": "Apache-2.0",
+  "description": "USAF Memo Playground with Quillmark",
   "devDependencies": {
-    "vite": "^7.1.9"
+    "vite": "^7.1.9",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.5.0"
   },
   "dependencies": {
     "@quillmark-test/fixtures": "^0.0.31",
