@@ -181,3 +181,10 @@ This package follows the canonical [Quill JSON Contract](../docs/QUILL_JSON.md).
 ## License
 
 ISC
+
+## More Resources
+
+- [Usage Examples](EXAMPLES.md) - 10 practical examples covering all use cases
+- [Before & After Comparison](../docs/BEFORE_AND_AFTER.md) - See the dramatic code reduction (70 lines → 3 lines!)
+- [Package Design Doc](../docs/WEB_PACKAGE_DESIGN.md) - Architecture and design decisions
+- [Quill JSON Contract](../docs/QUILL_JSON.md) - The canonical specification
