@@ -147,12 +147,17 @@ async function init() {
 
       // Create workflow and render
       const workflow = engine.loadWorkflow('usaf_memo');
+      
+      // Log for debugging
+      console.log('Rendering with format:', format);
+      console.log('Supported formats:', workflow.supportedFormats);
+      
       const result = workflow.render(markdown, { format });
 
       // Display result
       preview.innerHTML = '';
       
-      if (format === 'PDF') {
+      if (format === 'pdf') {
         // For PDF, create a blob and display in iframe
         const blob = new Blob([new Uint8Array(result.artifacts.main)], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
@@ -162,7 +167,7 @@ async function init() {
         iframe.style.height = '600px';
         iframe.style.border = 'none';
         preview.appendChild(iframe);
-      } else if (format === 'SVG') {
+      } else if (format === 'svg') {
         // For SVG, display directly
         const svgText = new TextDecoder().decode(new Uint8Array(result.artifacts.main));
         preview.innerHTML = svgText;
@@ -171,8 +176,26 @@ async function init() {
       showStatus('Rendering complete!', 'success');
     } catch (error) {
       console.error('Rendering error:', error);
-      preview.innerHTML = `<div class="error">${error instanceof Error ? error.message : String(error)}</div>`;
-      showStatus(`Error: ${error instanceof Error ? error.message : String(error)}`, 'error');
+      console.error('Error type:', typeof error);
+      console.error('Error keys:', error ? Object.keys(error) : 'null');
+      
+      let errorMessage = 'Unknown error';
+      if (error && typeof error === 'object') {
+        if ('message' in error) {
+          errorMessage = String(error.message);
+        } else if ('kind' in error) {
+          errorMessage = `${error.kind}: ${error.message || JSON.stringify(error)}`;
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = String(error);
+      }
+      
+      preview.innerHTML = `<div class="error">${errorMessage}</div>`;
+      showStatus(`Error: ${errorMessage}`, 'error');
     } finally {
       renderBtn.disabled = false;
     }
