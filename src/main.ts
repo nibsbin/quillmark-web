@@ -139,7 +139,6 @@ async function init() {
   let engine: QuillmarkEngine | null = null;
 
   try {
-    showLoading('Loading Quillmark engine and usaf_memo template...');
     engine = QuillmarkEngine.create({});
     const quill = await loadUsafMemoQuill();
     engine.registerQuill(quill);
@@ -147,7 +146,6 @@ async function init() {
   markdownInput.value = defaultMarkdown;
   // Make the Download PDF button clickable on load; clicking will render+download on demand
   if (downloadPdfBtn) downloadPdfBtn.disabled = false;
-  showStatus('Ready — SVG preview updates as you type. Click "Download PDF" when ready.', 'success');
   } catch (error) {
     console.error('Initialization error:', error);
     showStatus(`Error: ${error instanceof Error ? error.message : String(error)}`, 'error');
@@ -157,7 +155,6 @@ async function init() {
   // Auto-render SVG when the markdown changes
   const renderSvg = async () => {
     if (!engine) return;
-    showLoading('Rendering SVG...');
     try {
       const markdown = markdownInput.value;
       const workflow = engine.loadWorkflow('usaf_memo');
@@ -179,14 +176,13 @@ async function init() {
       console.log('Normalized artifact byte length (SVG):', normalized.length);
       const svgText = new TextDecoder().decode(normalized);
       preview.innerHTML = svgText;
-      showStatus('SVG updated', 'success');
     } catch (err) {
       console.error('SVG render error:', err);
       showStatus('SVG render failed', 'error');
     }
   };
 
-  const debouncedRender = debounce(renderSvg, 300);
+  const debouncedRender = debounce(renderSvg, 50);
   markdownInput.addEventListener('input', debouncedRender);
 
   // Initial SVG render on page load so the preview is populated immediately
