@@ -11,6 +11,8 @@ This package minimizes the boilerplate required to load Quill templates in web a
 - Building the Quill JSON contract structure
 - Converting files to the correct format
 
+**💡 New to this package? Start with the [Quick Start Guide](QUICKSTART.md)!**
+
 ## Installation
 
 ```bash
@@ -184,7 +186,8 @@ ISC
 
 ## More Resources
 
-- [Usage Examples](EXAMPLES.md) - 10 practical examples covering all use cases
-- [Before & After Comparison](../docs/BEFORE_AND_AFTER.md) - See the dramatic code reduction (70 lines → 3 lines!)
-- [Package Design Doc](../docs/WEB_PACKAGE_DESIGN.md) - Architecture and design decisions
-- [Quill JSON Contract](../docs/QUILL_JSON.md) - The canonical specification
+- **[Quick Start Guide](QUICKSTART.md)** - Get started in under 5 minutes!
+- **[Usage Examples](EXAMPLES.md)** - 10 practical examples covering all use cases
+- **[Before & After Comparison](../docs/BEFORE_AND_AFTER.md)** - See the dramatic code reduction (70 lines → 3 lines!)
+- **[Package Design Doc](../docs/WEB_PACKAGE_DESIGN.md)** - Architecture and design decisions
+- **[Quill JSON Contract](../docs/QUILL_JSON.md)** - The canonical specification
