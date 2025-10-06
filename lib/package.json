@@ -1,0 +1,37 @@
+{
+  "name": "@quillmark-test/web",
+  "version": "0.0.1",
+  "description": "Web utilities for loading Quills with @quillmark-test/wasm",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "quillmark",
+    "wasm",
+    "web",
+    "loader"
+  ],
+  "author": "",
+  "license": "ISC",
+  "peerDependencies": {
+    "@quillmark-test/wasm": "^0.0.34"
+  },
+  "devDependencies": {
+    "@quillmark-test/wasm": "^0.0.34",
+    "typescript": "^5.9.3"
+  }
+}

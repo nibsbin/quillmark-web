@@ -13,7 +13,8 @@
   "description": "",
   "dependencies": {
     "@quillmark-test/fixtures": "^0.0.34",
-    "@quillmark-test/wasm": "^0.0.34"
+    "@quillmark-test/wasm": "^0.0.34",
+    "@quillmark-test/web": "file:./lib"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",

@@ -9,6 +9,7 @@ A web-based playground for rendering Quillmark templates using `@quillmark-test/
 - 🎯 Pre-loaded with USAF memo template from fixtures
 - 🚀 Built with Vite and TypeScript
 - 📦 Uses the official Quillmark JSON contract for loading templates
+- ✨ Includes `@quillmark-test/web` - a new utility package that minimizes boilerplate for loading Quills
 
 ## Quick Start
 
@@ -42,15 +43,28 @@ npm run preview
 
 ## How It Works
 
-The playground demonstrates loading the `usaf_memo` Quill template from `@quillmark-test/fixtures` using the JSON contract format:
+The playground demonstrates loading the `usaf_memo` Quill template from `@quillmark-test/fixtures` using the new `@quillmark-test/web` utility package:
 
-1. **Loading the Quill**: The application reads all files from the `usaf_memo` fixture directory (including Quill.toml, glue.typ, assets, and packages) and constructs a JSON object following the Quillmark JSON contract specification.
+1. **Loading the Quill**: Uses the `@quillmark-test/web` package's `QuillLoader` to load templates with minimal boilerplate - just 3 lines of code instead of ~70 lines!
 
 2. **Creating the Engine**: Uses `QuillmarkEngine.create()` to initialize the WASM rendering engine.
 
 3. **Registering the Template**: The Quill is registered with the engine via `engine.registerQuill(quill)`.
 
 4. **Rendering**: Users can edit markdown in the editor and click "Render" to generate PDF or SVG output using the USAF memo template.
+
+### Code Example
+
+```typescript
+import { createQuillLoader } from '@quillmark-test/web';
+
+// Simple 3-line loading!
+const loader = createQuillLoader();
+const quill = await loader.loadFromFixtures('usaf_memo');
+engine.registerQuill(quill);
+```
+
+See [`lib/README.md`](lib/README.md) for full `@quillmark-test/web` documentation.
 
 ## JSON Contract
 
@@ -77,6 +91,7 @@ Example structure:
 - **Vite** - Fast build tool and dev server
 - **TypeScript** - Type-safe JavaScript
 - **@quillmark-test/wasm** - WebAssembly bindings for Quillmark
+- **@quillmark-test/web** - New utility package for easy Quill loading (see [`lib/`](lib/))
 - **@quillmark-test/fixtures** - Sample Quill templates and test fixtures
 - **vite-plugin-wasm** - WASM support for Vite
 
