@@ -24,11 +24,24 @@
             color: white;
             padding: 1rem 2rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         h1 {
             font-size: 1.5rem;
             font-weight: 600;
+        }
+
+        .template-selector {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #333;
+            font-size: 0.875rem;
+            cursor: pointer;
         }
 
         .container {
@@ -143,6 +156,10 @@
 <body>
     <header>
         <h1>🎖️ USAF Memo Playground</h1>
+        <select id="templateSelector" class="template-selector">
+            <option value="taro" selected>Taro Template (Simple)</option>
+            <option value="usaf_memo">USAF Memo (Full)</option>
+        </select>
     </header>
     
     <div class="container">
@@ -164,6 +181,6 @@
         </div>
     </div>
 
-    <script type="module" src="/main.js"></script>
+    <script type="module" src="/main-multi.js"></script>
 </body>
 </html>
