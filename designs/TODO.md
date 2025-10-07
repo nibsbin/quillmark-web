@@ -66,15 +66,6 @@ Goal: Run tests and build on PRs and pushes to `main` without a big matrix.
 
 ---
 
-## 5. Releases & publishing
-
-Goal: Keep releases manual and simple until we need automation.
-
-- [ ] Document a short release process in `RELEASE.md` or a section in `README.md` (bump version, run build, publish to npm).
-- [ ] Keep publishing to npm manual — no CI publishing hooks for now.
-
----
-
 ## Phase 6: Release Process
 
 ### 6.1 Versioning Strategy
