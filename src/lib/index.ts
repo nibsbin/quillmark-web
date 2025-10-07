@@ -16,6 +16,18 @@ export { Quill } from '@quillmark-test/wasm';
 // Extend Quillmark with web export utilities
 class Quillmark extends WasmQuillmark {
   /**
+   * Create a new Quillmark engine instance with web export utilities
+   * 
+   * @returns Enhanced Quillmark instance with export methods
+   */
+  static create(): Quillmark {
+    const instance = WasmQuillmark.create();
+    // Copy methods from our extended class to the instance
+    Object.setPrototypeOf(instance, Quillmark.prototype);
+    return instance as Quillmark;
+  }
+
+  /**
    * Export rendered markdown to a Blob
    * 
    * @param quillName - Name of the registered Quill
