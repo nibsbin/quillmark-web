@@ -1,12 +1,12 @@
 # Quillmark Web Rendering Playground
 
-A web-based playground for rendering Quillmark templates using `@quillmark-test/fixtures` and `@quillmark-test/wasm`.
+A web-based playground for rendering Quillmark templates using `@quillmark-test/wasm`.
 
 ## Features
 
 - 🖋️ Interactive markdown editor
 - 📄 Real-time rendering to PDF and SVG formats
-- 🎯 Pre-loaded with USAF memo template from fixtures
+- 🎯 Pre-loaded with USAF memo template
 - 🚀 Built with Vite and TypeScript
 - 📦 Uses the official Quillmark JSON contract for loading templates
 
@@ -42,9 +42,9 @@ npm run preview
 
 ## How It Works
 
-The playground demonstrates loading the `usaf_memo` Quill template from `@quillmark-test/fixtures` using the JSON contract format:
+The playground demonstrates loading the `usaf_memo` Quill template from the local `public/usaf_memo` directory using the JSON contract format:
 
-1. **Loading the Quill**: The application reads all files from the `usaf_memo` fixture directory (including Quill.toml, glue.typ, assets, and packages) and constructs a JSON object following the Quillmark JSON contract specification.
+1. **Loading the Quill**: The application reads all files from the local `public/usaf_memo` directory (including Quill.toml, glue.typ, assets, and packages) and constructs a JSON object following the Quillmark JSON contract specification.
 
 2. **Creating the Engine**: Uses `QuillmarkEngine.create()` to initialize the WASM rendering engine.
 
@@ -77,7 +77,6 @@ Example structure:
 - **Vite** - Fast build tool and dev server
 - **TypeScript** - Type-safe JavaScript
 - **@quillmark-test/wasm** - WebAssembly bindings for Quillmark
-- **@quillmark-test/fixtures** - Sample Quill templates and test fixtures
 - **vite-plugin-wasm** - WASM support for Vite
 
 ## Screenshots

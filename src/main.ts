@@ -1,15 +1,15 @@
 import { QuillmarkEngine, Quill } from '@quillmark-test/wasm';
 
-// Helper to read file as text from fixtures
+// Helper to read file as text from local public directory
 async function readFixtureFile(path: string): Promise<string> {
-  const response = await fetch(`/node_modules/@quillmark-test/fixtures/resources/${path}`);
+  const response = await fetch(`/${path}`);
   if (!response.ok) throw new Error(`Failed to load ${path}: ${response.statusText}`);
   return response.text();
 }
 
-// Helper to read file as bytes from fixtures
+// Helper to read file as bytes from local public directory
 async function readFixtureFileBytes(path: string): Promise<number[]> {
-  const response = await fetch(`/node_modules/@quillmark-test/fixtures/resources/${path}`);
+  const response = await fetch(`/${path}`);
   if (!response.ok) throw new Error(`Failed to load ${path}: ${response.statusText}`);
   const ab = await response.arrayBuffer();
   return Array.from(new Uint8Array(ab));
