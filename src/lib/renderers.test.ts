@@ -4,9 +4,7 @@ import { renderToBlob, renderToDataUrl, renderToElement, downloadArtifact } from
 // Mock Quillmark engine
 const createMockEngine = (artifactBytes: number[] = [72, 101, 108, 108, 111]) => {
   return {
-    render: vi.fn((quillName: string, markdown: string, options: any) => {
-      const format = options?.format || 'pdf';
-      
+    render: vi.fn((_quillName: string, _markdown: string, _options: any) => {
       // Return mock result matching the expected structure
       return {
         artifacts: {

@@ -22,5 +22,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/lib"]
+  "include": ["src/lib"],
+  "exclude": ["src/lib/**/*.test.ts", "src/lib/**/*.spec.ts"]
 }
