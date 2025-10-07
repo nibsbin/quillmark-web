@@ -1,29 +1,63 @@
 {
-  "name": "quillmark-web",
-  "version": "1.0.0",
+  "name": "@quillmark-test/web",
+  "version": "0.1.0",
   "type": "module",
+  "description": "Opinionated frontend utilities for Quillmark WASM",
+  "main": "./dist/lib/index.cjs",
+  "module": "./dist/lib/index.js",
+  "types": "./dist/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/lib/index.js",
+      "require": "./dist/lib/index.cjs",
+      "types": "./dist/lib/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/lib",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build:lib": "vite build --config vite.config.lib.ts && rm -rf dist/lib/quills dist/lib/usaf_memo",
+    "build:playground": "vite build",
+    "build": "npm run build:lib && npm run build:playground",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
   },
-  "keywords": [],
+  "keywords": [
+    "quillmark",
+    "markdown",
+    "pdf",
+    "typst",
+    "wasm",
+    "browser"
+  ],
   "author": "",
   "license": "Apache-2.0",
-  "description": "",
+  "peerDependencies": {
+    "@quillmark-test/wasm": "^0.0.38"
+  },
   "dependencies": {
-    "@quillmark-test/wasm": "^0.0.38",
     "fflate": "^0.8.2"
   },
   "devDependencies": {
+    "@quillmark-test/wasm": "^0.0.38",
     "@types/node": "^24.7.0",
+    "@vitest/ui": "^3.2.4",
+    "jsdom": "^27.0.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
+    "vite-plugin-dts": "^4.5.4",
     "vite-plugin-top-level-await": "^1.6.0",
-    "vite-plugin-wasm": "^3.5.0"
+    "vite-plugin-wasm": "^3.5.0",
+    "vitest": "^3.2.4"
   }
 }
