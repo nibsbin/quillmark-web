@@ -27,7 +27,10 @@
     "build": "npm run build:lib && npm run build:playground",
     "build:lib": "tsc --project tsconfig.lib.json && vite build --config vite.config.lib.ts",
     "build:playground": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
   },
   "keywords": [],
   "author": "",
@@ -42,9 +45,12 @@
   "devDependencies": {
     "@quillmark-test/wasm": "^0.0.35",
     "@types/node": "^24.7.0",
+    "@vitest/ui": "^3.2.4",
+    "happy-dom": "^19.0.2",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
     "vite-plugin-top-level-await": "^1.6.0",
-    "vite-plugin-wasm": "^3.5.0"
+    "vite-plugin-wasm": "^3.5.0",
+    "vitest": "^3.2.4"
   }
 }
