@@ -82,7 +82,7 @@ export async function renderToBlob(
     : format === 'svg' ? 'image/svg+xml'
     : 'text/plain';
   
-  return new Blob([bytes], { type: mimeType });
+  return new Blob([bytes.slice()], { type: mimeType });
 }
 
 /**
@@ -158,7 +158,7 @@ export async function renderToElement(
     element.innerHTML = svgText;
   } else if (format === 'pdf') {
     // Create blob URL and embed
-    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const blob = new Blob([bytes.slice()], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     element.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="600px" />`;
   } else {
