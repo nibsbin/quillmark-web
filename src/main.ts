@@ -1,10 +1,7 @@
 import { 
   Quillmark, 
-  fromZip,
-  renderToElement,
-  renderToBlob,
-  downloadArtifact,
-  debounce
+  loaders,
+  utils
 } from './lib';
 
 // Init app
@@ -34,13 +31,13 @@ async function init() {
   let engine: Quillmark | null = null;
 
   try {
-    // Load Quill from zip file using the opinionated fromZip utility
+    // Load Quill from zip file using the opinionated loaders.fromZip utility
     const response = await fetch('/quills/usaf_memo.zip');
     if (!response.ok) {
       throw new Error(`Failed to load Quill zip: ${response.statusText}`);
     }
     const zipBlob = await response.blob();
-    const quillJson = await fromZip(zipBlob);
+    const quillJson = await loaders.fromZip(zipBlob);
     
     // Create engine and register Quill
     engine = Quillmark.create();
@@ -58,12 +55,11 @@ async function init() {
     return;
   }
 
-  // Auto-render SVG when the markdown changes using renderToElement
+  // Auto-render SVG when the markdown changes using engine.exportToElement
   const renderSvg = async () => {
     if (!engine) return;
     try {
-      await renderToElement(
-        engine,
+      await engine.exportToElement(
         'usaf_memo',
         markdownInput.value,
         preview,
@@ -75,30 +71,23 @@ async function init() {
     }
   };
 
-  const debouncedRender = debounce(renderSvg, 50);
+  const debouncedRender = utils.debounce(renderSvg, 50);
   markdownInput.addEventListener('input', debouncedRender);
 
   // Initial SVG render on page load
   renderSvg().catch(err => console.error('Initial SVG render failed:', err));
 
-  // Download PDF on demand using renderToBlob and downloadArtifact
+  // Download PDF on demand using engine.download
   downloadPdfBtn?.addEventListener('click', async () => {
     if (!engine) return;
     showLoading('Rendering PDF...');
     try {
-      const blob = await renderToBlob(
-        engine,
+      await engine.download(
         'usaf_memo',
         markdownInput.value,
+        'render-output.pdf',
         { format: 'pdf' }
       );
-      
-      if (blob.size === 0) {
-        showStatus('No PDF artifact produced', 'error');
-        return;
-      }
-
-      downloadArtifact(blob, 'render-output.pdf');
       showStatus('Download started — check your browser downloads', 'success');
     } catch (err) {
       console.error('PDF render/download error:', err);

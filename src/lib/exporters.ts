@@ -1,5 +1,5 @@
 /**
- * Rendering helper utilities
+ * Export helper utilities for converting rendered artifacts to browser formats
  */
 
 import type { Quillmark } from '@quillmark-test/wasm';
@@ -43,7 +43,7 @@ function toUint8Array(bytesOrArtifact: any): Uint8Array {
 }
 
 /**
- * Render markdown to a Blob
+ * Export rendered markdown to a Blob
  * 
  * @param engine - Quillmark engine instance
  * @param quillName - Name of the registered Quill
@@ -52,11 +52,11 @@ function toUint8Array(bytesOrArtifact: any): Uint8Array {
  * @returns Blob containing the rendered output
  * 
  * @example
- * const blob = await renderToBlob(engine, 'my-quill', markdown, { format: 'pdf' });
+ * const blob = await exportToBlob(engine, 'my-quill', markdown, { format: 'pdf' });
  * const url = URL.createObjectURL(blob);
  * window.open(url);
  */
-export async function renderToBlob(
+export async function exportToBlob(
   engine: Quillmark,
   quillName: string,
   markdown: string,
@@ -86,7 +86,7 @@ export async function renderToBlob(
 }
 
 /**
- * Render markdown to a data URL
+ * Export rendered markdown to a data URL
  * 
  * @param engine - Quillmark engine instance
  * @param quillName - Name of the registered Quill
@@ -95,16 +95,16 @@ export async function renderToBlob(
  * @returns Data URL string
  * 
  * @example
- * const dataUrl = await renderToDataUrl(engine, 'my-quill', markdown, { format: 'svg' });
+ * const dataUrl = await exportToDataUrl(engine, 'my-quill', markdown, { format: 'svg' });
  * imgElement.src = dataUrl;
  */
-export async function renderToDataUrl(
+export async function exportToDataUrl(
   engine: Quillmark,
   quillName: string,
   markdown: string,
   options?: RenderOptions
 ): Promise<string> {
-  const blob = await renderToBlob(engine, quillName, markdown, options);
+  const blob = await exportToBlob(engine, quillName, markdown, options);
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result as string);
@@ -114,7 +114,7 @@ export async function renderToDataUrl(
 }
 
 /**
- * Render markdown directly into a DOM element
+ * Export rendered markdown directly into a DOM element
  * 
  * For SVG: Injects SVG markup directly
  * For PDF: Creates an embed or iframe element
@@ -128,9 +128,9 @@ export async function renderToDataUrl(
  * 
  * @example
  * const preview = document.getElementById('preview');
- * await renderToElement(engine, 'my-quill', markdown, preview, { format: 'svg' });
+ * await exportToElement(engine, 'my-quill', markdown, preview, { format: 'svg' });
  */
-export async function renderToElement(
+export async function exportToElement(
   engine: Quillmark,
   quillName: string,
   markdown: string,
@@ -169,16 +169,16 @@ export async function renderToElement(
 }
 
 /**
- * Trigger browser download of a rendered artifact
+ * Trigger browser download of a blob
  * 
  * @param blob - Blob to download
  * @param filename - Name for the downloaded file
  * 
  * @example
- * const blob = await renderToBlob(engine, 'my-quill', markdown);
- * downloadArtifact(blob, 'output.pdf');
+ * const blob = await exportToBlob(engine, 'my-quill', markdown);
+ * download(blob, 'output.pdf');
  */
-export function downloadArtifact(blob: Blob, filename: string): void {
+export function download(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

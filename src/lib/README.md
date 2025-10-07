@@ -7,7 +7,8 @@ This library wraps `@quillmark-test/wasm` with high-level helpers for common fro
 ## Features
 
 ✅ **Opinionated Quill Loading**: All Quills loaded from .zip files for consistency  
-✅ **Easy Rendering**: `renderToBlob()`, `renderToDataUrl()`, `renderToElement()`  
+✅ **Easy Exporting**: Object-oriented API with `engine.exportToBlob()`, `engine.exportToDataUrl()`, `engine.exportToElement()`  
+✅ **Grouped Utilities**: `loaders`, `exporters`, `utils` for clear organization  
 ✅ **Full WASM Access**: Re-exports all low-level APIs  
 ✅ **Type Safety**: Complete TypeScript definitions  
 ✅ **Small Footprint**: ~28KB total with zip support  
@@ -30,76 +31,139 @@ This library takes an opinionated approach: **all Quills must be loaded from .zi
 
 ## Quick Start
 
-### Load and Render a Quill
+### Load and Render a Quill (Recommended OOP API)
 
 ```typescript
-import { Quillmark, Quill, fromZip, renderToBlob, downloadArtifact } from './lib';
+import { Quillmark, loaders } from './lib';
 
 async function renderDocument() {
-  // Load Quill from server
+  // Load Quill from server using grouped loaders
   const response = await fetch('/quills/my-template.zip');
   const zipBlob = await response.blob();
-  const quillJson = await fromZip(zipBlob);
+  const quillJson = await loaders.fromZip(zipBlob);
   
   // Create engine and register
   const engine = Quillmark.create();
-  const quill = Quill.fromJson(JSON.stringify(quillJson));
-  engine.registerQuill(quill);
+  engine.registerQuill('my-template', quillJson);
   
-  // Render to PDF
+  // Export to PDF using clean OOP methods
   const markdown = '# Hello World\n\nMy first document!';
-  const blob = await renderToBlob(engine, 'my-template', markdown, { format: 'pdf' });
-  
-  // Download
-  downloadArtifact(blob, 'output.pdf');
+  await engine.download('my-template', markdown, 'output.pdf', { format: 'pdf' });
 }
 ```
 
-### Real-time SVG Preview
+### Real-time SVG Preview (OOP API)
 
 ```typescript
-import { Quillmark, Quill, fromZip, renderToElement, debounce } from './lib';
+import { Quillmark, loaders, utils } from './lib';
 
 async function setupEditor() {
   // Load Quill from zip
   const response = await fetch('/quills/letter.zip');
   const zipBlob = await response.blob();
-  const quillJson = await fromZip(zipBlob);
+  const quillJson = await loaders.fromZip(zipBlob);
   
   const engine = Quillmark.create();
-  const quill = Quill.fromJson(JSON.stringify(quillJson));
-  engine.registerQuill(quill);
+  engine.registerQuill('letter', quillJson);
   
   const editor = document.querySelector('#editor');
   const preview = document.querySelector('#preview');
   
-  editor.addEventListener('input', debounce(async () => {
-    await renderToElement(engine, 'letter', editor.value, preview, { format: 'svg' });
+  // Use grouped utils for debounce
+  editor.addEventListener('input', utils.debounce(async () => {
+    await engine.exportToElement('letter', editor.value, preview, { format: 'svg' });
   }, 300));
+}
+```
+
+### Alternative: Functional API
+
+The functional API is still available for those who prefer it:
+
+```typescript
+import { Quillmark, loaders, exporters } from './lib';
+
+async function renderDocument() {
+  const response = await fetch('/quills/my-template.zip');
+  const zipBlob = await response.blob();
+  const quillJson = await loaders.fromZip(zipBlob);
+  
+  const engine = Quillmark.create();
+  engine.registerQuill('my-template', quillJson);
+  
+  const markdown = '# Hello World\n\nMy first document!';
+  const blob = await exporters.toBlob(engine, 'my-template', markdown, { format: 'pdf' });
+  exporters.download(blob, 'output.pdf');
 }
 ```
 
 ### User Upload
 
 ```typescript
-import { fromZip } from './lib';
+import { loaders } from './lib';
 
 const fileInput = document.querySelector('input[type="file"]');
 fileInput.accept = '.zip';
 fileInput.addEventListener('change', async (e) => {
   const zipFile = e.target.files[0];
-  const quillJson = await fromZip(zipFile);
+  const quillJson = await loaders.fromZip(zipFile);
   
-  const quill = Quill.fromJson(JSON.stringify(quillJson));
-  engine.registerQuill(quill);
+  engine.registerQuill('user-template', quillJson);
 });
 ```
 
 ## API Reference
 
-### Loaders
+### Enhanced Quillmark Class
 
-#### `fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson>`
+The `Quillmark` class from `@quillmark-test/web` extends the WASM `Quillmark` class with convenient export methods:
+
+#### `engine.exportToBlob(quillName, markdown, options?): Promise<Blob>`
+
+Export rendered markdown to a Blob for download or preview.
+
+```typescript
+const blob = await engine.exportToBlob('my-quill', markdown, { format: 'pdf' });
+const url = URL.createObjectURL(blob);
+window.open(url);
+```
+
+#### `engine.exportToDataUrl(quillName, markdown, options?): Promise<string>`
+
+Export rendered markdown to a data URL for inline embedding.
+
+```typescript
+const dataUrl = await engine.exportToDataUrl('my-quill', markdown, { format: 'svg' });
+imgElement.src = dataUrl;
+```
+
+#### `engine.exportToElement(quillName, markdown, element, options?): Promise<void>`
+
+Export rendered markdown directly into a DOM element.
+
+```typescript
+const preview = document.getElementById('preview');
+await engine.exportToElement('my-quill', markdown, preview, { format: 'svg' });
+```
+
+#### `engine.download(quillName, markdown, filename, options?): Promise<void>`
+
+Render markdown and trigger browser download.
+
+```typescript
+await engine.download('my-quill', markdown, 'output.pdf', { format: 'pdf' });
+```
+
+### Grouped Exports
+
+#### `loaders`
+
+```typescript
+import { loaders } from './lib';
+
+// loaders.fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson>
+const quillJson = await loaders.fromZip(zipBlob);
+```
 
 Load a Quill from a .zip file. This is the **only** supported loading method.
 
@@ -109,33 +173,52 @@ Load a Quill from a .zip file. This is the **only** supported loading method.
 - Provides built-in validation (must contain Quill.toml)
 - Eliminates security concerns with directory traversal
 
-### Renderers
+#### `exporters`
 
-#### `renderToBlob(engine, quillName, markdown, options?): Promise<Blob>`
+Standalone functions for the functional API (also available as Quillmark instance methods):
 
-Render markdown to a Blob for download or preview.
+```typescript
+import { exporters } from './lib';
 
-#### `renderToDataUrl(engine, quillName, markdown, options?): Promise<string>`
+// exporters.toBlob(engine, quillName, markdown, options?): Promise<Blob>
+const blob = await exporters.toBlob(engine, 'my-quill', markdown, { format: 'pdf' });
 
-Render markdown to a data URL for inline embedding.
+// exporters.toDataUrl(engine, quillName, markdown, options?): Promise<string>
+const dataUrl = await exporters.toDataUrl(engine, 'my-quill', markdown, { format: 'svg' });
 
-#### `renderToElement(engine, quillName, markdown, element, options?): Promise<void>`
+// exporters.toElement(engine, quillName, markdown, element, options?): Promise<void>
+await exporters.toElement(engine, 'my-quill', markdown, preview, { format: 'svg' });
 
-Render markdown directly into a DOM element.
+// exporters.download(blob, filename): void
+exporters.download(blob, 'output.pdf');
+```
 
-#### `downloadArtifact(blob: Blob, filename: string): void`
+#### `utils`
 
-Trigger browser download of a rendered artifact.
+```typescript
+import { utils } from './lib';
 
-### Utilities
+// utils.debounce(fn, wait): Function
+const debouncedHandler = utils.debounce(() => { /* ... */ }, 300);
 
-#### `debounce(fn, wait): Function`
+// utils.detectBinaryFile(filename: string): boolean
+const isBinary = utils.detectBinaryFile('logo.png'); // true
+```
 
-Simple debounce function for event handlers.
+### Backward Compatibility
 
-#### `detectBinaryFile(filename: string): boolean`
+For backward compatibility, the old function names are still available:
 
-Determine if a file should be treated as binary.
+```typescript
+import { 
+  fromZip,              // same as loaders.fromZip
+  renderToBlob,         // alias for exportToBlob
+  renderToDataUrl,      // alias for exportToDataUrl
+  renderToElement,      // alias for exportToElement
+  downloadArtifact,     // alias for download
+  debounce              // same as utils.debounce
+} from './lib';
+```
 
 ## Creating Quill Zip Files
 
