@@ -12,7 +12,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@quillmark-test/wasm": "^0.0.34"
+    "@quillmark-test/wasm": "^0.0.34",
+    "fflate": "^0.8.2"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",
