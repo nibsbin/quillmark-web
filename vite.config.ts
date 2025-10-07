@@ -7,6 +7,9 @@ export default defineConfig({
     wasm(),
     topLevelAwait()
   ],
+  build: {
+    outDir: 'dist/playground'
+  },
   server: {
     fs: {
       // Allow serving files from node_modules
