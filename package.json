@@ -16,7 +16,7 @@
   "license": "Apache-2.0",
   "description": "",
   "dependencies": {
-    "@quillmark-test/wasm": "^0.0.35",
+    "@quillmark-test/wasm": "^0.0.38",
     "fflate": "^0.8.2"
   },
   "devDependencies": {
