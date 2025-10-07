@@ -2,13 +2,31 @@
   "name": "quillmark-web",
   "version": "1.0.0",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src/lib",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build:lib && npm run build:playground",
+    "build:lib": "tsc --project tsconfig.lib.json && vite build --config vite.config.lib.ts",
+    "build:playground": "vite build",
     "preview": "vite preview"
   },
   "keywords": [],
@@ -16,10 +34,13 @@
   "license": "Apache-2.0",
   "description": "",
   "dependencies": {
-    "@quillmark-test/wasm": "^0.0.35",
     "fflate": "^0.8.2"
   },
+  "peerDependencies": {
+    "@quillmark-test/wasm": "^0.0.35"
+  },
   "devDependencies": {
+    "@quillmark-test/wasm": "^0.0.35",
     "@types/node": "^24.7.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
