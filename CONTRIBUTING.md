@@ -173,6 +173,45 @@ Add fromZip validation for missing Quill.toml
 - Update error handling documentation
 ```
 
+## Releasing
+
+**Note:** Only maintainers with repository push access can create releases. Publishing to NPM is automated via GitHub Actions.
+
+The project uses an automated versioning workflow (see `designs/VERSIONING.MD`) that handles version bumping, git tagging, and pushing. A GitHub Action then detects the tag and publishes to NPM using credentials from the Publish environment.
+
+### Release Commands
+
+```bash
+# Patch release (0.1.0 -> 0.1.1) - for bug fixes
+npm run release:patch
+
+# Minor release (0.1.0 -> 0.2.0) - for new features
+npm run release:minor
+
+# Major release (0.1.0 -> 1.0.0) - for breaking changes
+npm run release:major
+```
+
+### Release Process
+
+When you run a release command:
+
+1. **Tests are run** (`preversion` hook) - Release aborts if tests fail
+2. **Version is bumped** in `package.json` and `package-lock.json`
+3. **Git commit and tag** are created automatically
+4. **Changes are pushed** to GitHub with tags (`postversion` hook)
+5. **GitHub Action is triggered** by the new tag
+6. **Package is published** to NPM registry automatically by the workflow
+
+### Prerequisites for Releasing
+
+- Working directory must be clean (no uncommitted changes)
+- All tests must pass
+- Must be on the main branch (recommended)
+- Must have push access to the repository
+
+**Note:** Developers should never publish to NPM from their local machines. The GitHub Actions workflow handles NPM publishing using the `NPM_TOKEN` secret from the Publish environment.
+
 ## Reporting Issues
 
 When reporting bugs or requesting features:
