@@ -1,69 +1,77 @@
 import { QuillmarkEngine, Quill } from '@quillmark-test/wasm';
 
-// Helper to read file as text from fixtures
-async function readFixtureFile(path: string): Promise<string> {
-  const response = await fetch(`/node_modules/@quillmark-test/fixtures/resources/${path}`);
+// File list for usaf_memo Quill - directly embedded since structure is known
+const USAF_MEMO_FILES = [
+  'Quill.toml',
+  'glue.typ',
+  'usaf_memo.md',
+  'assets/CopperplateCC-Heavy.otf',
+  'assets/DejaVuSansMono-Bold.ttf',
+  'assets/DejaVuSansMono-BoldOblique.ttf',
+  'assets/DejaVuSansMono-Oblique.ttf',
+  'assets/DejaVuSansMono.ttf',
+  'assets/NimbusRomNo9L-Med.otf',
+  'assets/NimbusRomNo9L-MedIta.otf',
+  'assets/NimbusRomNo9L-Reg.otf',
+  'assets/NimbusRomNo9L-RegIta.otf',
+  'assets/dod_seal.gif',
+  'packages/tonguetoquill-usaf-memo/LICENSE',
+  'packages/tonguetoquill-usaf-memo/src/lib.typ',
+  'packages/tonguetoquill-usaf-memo/src/utils.typ',
+  'packages/tonguetoquill-usaf-memo/typst.toml',
+];
+
+const BINARY_EXTENSIONS = new Set(['.otf', '.ttf', '.gif', '.png', '.jpg', '.jpeg']);
+
+// Helper to read file as text
+async function readTextFile(path: string): Promise<string> {
+  const response = await fetch(`/${path}`);
   if (!response.ok) throw new Error(`Failed to load ${path}: ${response.statusText}`);
   return response.text();
 }
 
-// Helper to read file as bytes from fixtures
-async function readFixtureFileBytes(path: string): Promise<number[]> {
-  const response = await fetch(`/node_modules/@quillmark-test/fixtures/resources/${path}`);
+// Helper to read file as bytes
+async function readBinaryFile(path: string): Promise<number[]> {
+  const response = await fetch(`/${path}`);
   if (!response.ok) throw new Error(`Failed to load ${path}: ${response.statusText}`);
   const ab = await response.arrayBuffer();
   return Array.from(new Uint8Array(ab));
 }
 
-// Load a Quill from the fixtures manifest and resources (builds the tree recursively)
-async function loadUsafMemoQuill(): Promise<Quill> {
-  // Fetch the public manifest which maps fixture sets to file lists
-  const resp = await fetch('/fixtures-manifest.json');
-  if (!resp.ok) throw new Error('Failed to load fixtures manifest');
-  const manifest = await resp.json() as Record<string, string[]>;
-
-  const setName = 'usaf_memo';
-  const entries = manifest[setName];
-  if (!entries) throw new Error(`No manifest entry for ${setName}`);
-
-  // Helper to insert a file path like 'packages/foo/src/lib.typ' into the nested object
-  function insertPath(root: any, parts: string[], value: any) {
-    const [head, ...rest] = parts;
-    if (!rest || rest.length === 0) {
-      root[head] = value;
-      return;
-    }
-    if (!(head in root)) root[head] = {};
-    insertPath(root[head], rest, value);
+// Helper to insert a file path like 'packages/foo/src/lib.typ' into nested object
+function insertPath(root: any, parts: string[], value: any) {
+  const [head, ...rest] = parts;
+  if (!rest || rest.length === 0) {
+    root[head] = value;
+    return;
   }
+  if (!(head in root)) root[head] = {};
+  insertPath(root[head], rest, value);
+}
 
-  const quillObj: any = { name: setName };
+// Load the USAF memo Quill from local files
+async function loadUsafMemoQuill(): Promise<Quill> {
+  const quillObj: any = { name: 'usaf_memo' };
 
-  // Decide which files are binary
-  const binaryExt = new Set(['.otf', '.ttf', '.gif', '.png', '.jpg', '.jpeg']);
-
-  // Load each listed file and insert into quillObj under the setName directory
-  for (const relPath of entries) {
-    const fullPath = `${setName}/${relPath}`; // matches fixture resource layout
+  for (const relPath of USAF_MEMO_FILES) {
+    const fullPath = `usaf_memo/${relPath}`;
     const parts = relPath.split('/');
     const fileName = parts[parts.length - 1];
-
-    // choose binary vs text loader by file extension
     const ext = fileName.includes('.') ? fileName.slice(fileName.lastIndexOf('.')).toLowerCase() : '';
+
     try {
-      if (binaryExt.has(ext)) {
-        const bytes = await readFixtureFileBytes(fullPath);
+      if (BINARY_EXTENSIONS.has(ext)) {
+        const bytes = await readBinaryFile(fullPath);
         insertPath(quillObj, parts, { contents: bytes });
       } else {
-        const text = await readFixtureFile(fullPath);
+        const text = await readTextFile(fullPath);
         insertPath(quillObj, parts, { contents: text });
       }
     } catch (err) {
-      console.warn('Failed loading fixture', fullPath, err);
+      console.warn('Failed loading file', fullPath, err);
     }
   }
 
-  // Return a Quill constructed from the JSON contract
   return Quill.fromJson(JSON.stringify(quillObj));
 }
 
@@ -142,7 +150,7 @@ async function init() {
     engine = QuillmarkEngine.create({});
     const quill = await loadUsafMemoQuill();
     engine.registerQuill(quill);
-    const defaultMarkdown = await readFixtureFile('usaf_memo/usaf_memo.md');
+    const defaultMarkdown = await readTextFile('usaf_memo/usaf_memo.md');
   markdownInput.value = defaultMarkdown;
   // Make the Download PDF button clickable on load; clicking will render+download on demand
   if (downloadPdfBtn) downloadPdfBtn.disabled = false;
