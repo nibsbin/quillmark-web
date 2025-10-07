@@ -1,8 +1,10 @@
 # Quillmark Web Library Design - Frontend Developer Experience
 
-> **Status**: Design Document
+> **Status**: Implemented
 >
 > This document defines the `@quillmark-test/web` package, which provides opinionated, clean utilities for frontend developers working with Quillmark. It wraps `@quillmark-test/wasm@v0.0.35` with convenience functions for common tasks.
+>
+> **Note**: This design has been enhanced with the improved API described in `WEB_LIB_DESIGN_IMPROVED.md`, which adds object-oriented methods to the `Quillmark` class and grouped exports for better discoverability.
 
 ---
 
@@ -61,21 +63,30 @@ The `@quillmark-test/web` package aims to:
 ┌──────────────────────────────────────┐
 │    @quillmark-test/web               │
 │  ┌────────────────────────────────┐  │
-│  │  Quill Loaders                 │  │
-│  │  - fromZip()                   │  │
-│  │  - fromFiles()                 │  │
-│  │  - fromDirectory()             │  │
+│  │  Enhanced Quillmark Class      │  │
+│  │  - create()          [WASM]    │  │
+│  │  - registerQuill()   [WASM]    │  │
+│  │  - render()          [WASM]    │  │
+│  │  - exportToBlob()    [Web]     │  │
+│  │  - exportToDataUrl() [Web]     │  │
+│  │  - exportToElement() [Web]     │  │
+│  │  - download()        [Web]     │  │
 │  └────────────────────────────────┘  │
 │  ┌────────────────────────────────┐  │
-│  │  Rendering Helpers             │  │
-│  │  - renderToBlob()              │  │
-│  │  - renderToDataUrl()           │  │
-│  │  - renderToElement()           │  │
-│  └────────────────────────────────┘  │
-│  ┌────────────────────────────────┐  │
-│  │  Re-Exports                    │  │
-│  │  - Quillmark (WASM class)      │  │
-│  │  - All types & interfaces      │  │
+│  │  Grouped Utilities             │  │
+│  │                                 │  │
+│  │  loaders:                      │  │
+│  │    - fromZip()                 │  │
+│  │                                 │  │
+│  │  exporters:                    │  │
+│  │    - toBlob()                  │  │
+│  │    - toDataUrl()               │  │
+│  │    - toElement()               │  │
+│  │    - download()                │  │
+│  │                                 │  │
+│  │  utils:                        │  │
+│  │    - detectBinaryFile()        │  │
+│  │    - debounce()                │  │
 │  └────────────────────────────────┘  │
 └──────────────┬───────────────────────┘
                │
@@ -92,7 +103,7 @@ The `@quillmark-test/web` package aims to:
 
 ### 1. Quill Loaders
 
-These utilities convert various input formats into the Quill JSON contract that WASM expects.
+The opinionated approach: **all Quills must be loaded from .zip files**.
 
 #### `fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson>`
 
@@ -107,9 +118,11 @@ Extracts a .zip file and converts it to the Quill JSON contract format.
  * @throws Error if zip is invalid or missing Quill.toml
  * 
  * @example
- * const input = document.querySelector('input[type="file"]');
- * const zipFile = input.files[0];
- * const quillJson = await QuillmarkWeb.fromZip(zipFile);
+ * import { loaders } from '@quillmark-test/web';
+ * 
+ * const response = await fetch('/quills/my-template.zip');
+ * const zipBlob = await response.blob();
+ * const quillJson = await loaders.fromZip(zipBlob);
  * 
  * const engine = Quillmark.create();
  * engine.registerQuill('my-template', quillJson);
@@ -118,96 +131,42 @@ async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson>
 ```
 
 **Implementation approach:**
-- Use a lightweight zip library like `fflate` (pure JS, fast)
+- Use `fflate` library for zip extraction
 - Detect binary vs text files by extension
 - Build nested JSON structure matching WASM contract
 - Validate that `Quill.toml` exists
 
-#### `fromFiles(files: FileList | File[]): Promise<QuillJson>`
+**Why zip-only?**
+- Ensures all Quills are packaged consistently
+- Simplifies distribution and sharing
+- Provides built-in validation (must contain Quill.toml)
+- Eliminates security concerns with directory traversal
 
-Converts uploaded files (via `<input type="file" webkitdirectory>`) to Quill JSON.
+### 2. Export Helpers
 
-```typescript
-/**
- * Load a Quill template from uploaded files/directories
- * 
- * @param files - FileList or File array from file input
- * @returns Quill JSON object ready for registerQuill()
- * @throws Error if no Quill.toml found
- * 
- * @example
- * const input = document.querySelector('input[type="file"]');
- * input.setAttribute('webkitdirectory', '');
- * input.addEventListener('change', async (e) => {
- *   const quillJson = await QuillmarkWeb.fromFiles(e.target.files);
- *   engine.registerQuill('uploaded', quillJson);
- * });
- */
-async function fromFiles(files: FileList | File[]): Promise<QuillJson>
-```
+These utilities wrap the WASM `render()` method with convenient browser-friendly output formats.
 
-**Implementation approach:**
-- Parse `file.webkitRelativePath` to build directory structure
-- Detect binary files by extension (same as fromZip)
-- Handle both file uploads and directory uploads
-- Auto-detect Quill name from root directory or Quill.toml
+> **Note**: These are available both as standalone functions (`exporters.toBlob()`) and as instance methods on the enhanced `Quillmark` class (`engine.exportToBlob()`).
 
-#### `fromDirectory(baseUrl: string, manifestPath?: string): Promise<QuillJson>`
+#### `exportToBlob(engine, quillName, markdown, options?): Promise<Blob>`
 
-Fetches a Quill template from a remote directory (requires manifest file or known structure).
+Export rendered markdown to a Blob for download or preview.
 
 ```typescript
 /**
- * Load a Quill template from a remote directory via fetch
- * 
- * @param baseUrl - Base URL of the Quill directory
- * @param manifestPath - Optional path to file listing (e.g., 'files.json')
- * @returns Quill JSON object ready for registerQuill()
+ * Export rendered markdown to a Blob
  * 
  * @example
- * // With manifest file listing all paths
- * const quillJson = await QuillmarkWeb.fromDirectory(
- *   '/templates/usaf-memo',
- *   'files.json'  // contains: ["Quill.toml", "glue.typ", "assets/logo.png"]
- * );
+ * // Functional API
+ * import { exporters } from '@quillmark-test/web';
+ * const blob = await exporters.toBlob(engine, 'my-quill', markdown, { format: 'pdf' });
  * 
- * // With predefined file list
- * const quillJson = await QuillmarkWeb.fromDirectory('/templates/usaf-memo', [
- *   'Quill.toml',
- *   'glue.typ',
- *   'assets/logo.png'
- * ]);
- */
-async function fromDirectory(
-  baseUrl: string, 
-  manifestPath?: string | string[]
-): Promise<QuillJson>
-```
-
-**Implementation approach:**
-- If manifest provided, fetch it and parse file list
-- Fetch each file (text or binary based on extension)
-- Build JSON contract structure
-- This is essentially what the current demo does—extract it into a reusable function
-
-### 2. Rendering Helpers
-
-These utilities wrap the WASM `render()` method with convenient output formats.
-
-#### `renderToBlob(engine, quillName, markdown, options?): Promise<Blob>`
-
-Renders to a Blob for download or preview.
-
-```typescript
-/**
- * Render markdown to a Blob
- * 
- * @example
- * const blob = await QuillmarkWeb.renderToBlob(engine, 'my-quill', markdown);
+ * // OOP API (recommended)
+ * const blob = await engine.exportToBlob('my-quill', markdown, { format: 'pdf' });
  * const url = URL.createObjectURL(blob);
  * window.open(url);
  */
-async function renderToBlob(
+async function exportToBlob(
   engine: Quillmark,
   quillName: string,
   markdown: string,
@@ -215,19 +174,23 @@ async function renderToBlob(
 ): Promise<Blob>
 ```
 
-#### `renderToDataUrl(engine, quillName, markdown, options?): Promise<string>`
+#### `exportToDataUrl(engine, quillName, markdown, options?): Promise<string>`
 
-Renders to a data URL for inline embedding.
+Export rendered markdown to a data URL for inline embedding.
 
 ```typescript
 /**
- * Render markdown to a data URL
+ * Export rendered markdown to a data URL
  * 
  * @example
- * const dataUrl = await QuillmarkWeb.renderToDataUrl(engine, 'my-quill', markdown, { format: 'svg' });
+ * // Functional API
+ * const dataUrl = await exporters.toDataUrl(engine, 'my-quill', markdown, { format: 'svg' });
+ * 
+ * // OOP API (recommended)
+ * const dataUrl = await engine.exportToDataUrl('my-quill', markdown, { format: 'svg' });
  * imgElement.src = dataUrl;
  */
-async function renderToDataUrl(
+async function exportToDataUrl(
   engine: Quillmark,
   quillName: string,
   markdown: string,
@@ -235,22 +198,26 @@ async function renderToDataUrl(
 ): Promise<string>
 ```
 
-#### `renderToElement(engine, quillName, markdown, element, options?): Promise<void>`
+#### `exportToElement(engine, quillName, markdown, element, options?): Promise<void>`
 
-Renders directly into a DOM element (SVG or iframe for PDF).
+Export rendered markdown directly into a DOM element (SVG injected directly, PDF as embed).
 
 ```typescript
 /**
- * Render markdown directly into a DOM element
+ * Export rendered markdown directly into a DOM element
  * 
  * For SVG: Injects SVG markup directly
- * For PDF: Creates an iframe or embed element
+ * For PDF: Creates an embed element
  * 
  * @example
+ * // Functional API
+ * await exporters.toElement(engine, 'my-quill', markdown, preview, { format: 'svg' });
+ * 
+ * // OOP API (recommended)
  * const preview = document.getElementById('preview');
- * await QuillmarkWeb.renderToElement(engine, 'my-quill', markdown, preview, { format: 'svg' });
+ * await engine.exportToElement('my-quill', markdown, preview, { format: 'svg' });
  */
-async function renderToElement(
+async function exportToElement(
   engine: Quillmark,
   quillName: string,
   markdown: string,
@@ -259,19 +226,23 @@ async function renderToElement(
 ): Promise<void>
 ```
 
-#### `downloadArtifact(blob, filename): void`
+#### `download(blob, filename): void` or `engine.download(quillName, markdown, filename, options?): Promise<void>`
 
-Triggers a browser download.
+Trigger a browser download.
 
 ```typescript
 /**
- * Trigger browser download of a rendered artifact
+ * Trigger browser download of a blob
  * 
  * @example
- * const blob = await QuillmarkWeb.renderToBlob(engine, 'my-quill', markdown);
- * QuillmarkWeb.downloadArtifact(blob, 'output.pdf');
+ * // Functional API
+ * const blob = await exporters.toBlob(engine, 'my-quill', markdown);
+ * exporters.download(blob, 'output.pdf');
+ * 
+ * // OOP API (recommended) - combines export and download
+ * await engine.download('my-quill', markdown, 'output.pdf', { format: 'pdf' });
  */
-function downloadArtifact(blob: Blob, filename: string): void
+function download(blob: Blob, filename: string): void
 ```
 
 ### 3. Utility Functions
@@ -285,8 +256,9 @@ Determines if a file should be treated as binary based on extension.
  * Check if a filename indicates a binary file
  * 
  * @example
- * QuillmarkWeb.detectBinaryFile('logo.png')  // true
- * QuillmarkWeb.detectBinaryFile('glue.typ')  // false
+ * import { utils } from '@quillmark-test/web';
+ * utils.detectBinaryFile('logo.png')  // true
+ * utils.detectBinaryFile('glue.typ')  // false
  */
 function detectBinaryFile(filename: string): boolean
 ```
@@ -296,24 +268,79 @@ function detectBinaryFile(filename: string): boolean
 `.pdf`, `.ttf`, `.otf`, `.woff`, `.woff2`, 
 `.zip`, `.tar`, `.gz`
 
-#### `buildQuillJson(files, metadata?): QuillJson`
+#### `debounce<T>(fn: T, ms: number): Function`
 
-Low-level builder for constructing Quill JSON manually.
+Simple debounce utility for event handlers.
 
 ```typescript
 /**
- * Manually construct Quill JSON from file entries
+ * Debounce a function call
  * 
  * @example
- * const quillJson = QuillmarkWeb.buildQuillJson({
- *   'Quill.toml': { contents: '...' },
- *   'glue.typ': { contents: '...' }
- * }, { name: 'my-quill' });
+ * import { utils } from '@quillmark-test/web';
+ * 
+ * const debouncedHandler = utils.debounce(() => {
+ *   // expensive operation
+ * }, 300);
+ * 
+ * element.addEventListener('input', debouncedHandler);
  */
-function buildQuillJson(
-  files: Record<string, FileNode>,
-  metadata?: QuillMetadata
-): QuillJson
+function debounce<T extends (...args: any[]) => void>(
+  fn: T, 
+  ms: number
+): (...args: Parameters<T>) => void
+```
+
+### 4. Enhanced Quillmark Class
+
+The `Quillmark` class exported from `@quillmark-test/web` extends the WASM `Quillmark` class with web-specific export methods:
+
+```typescript
+class Quillmark extends WasmQuillmark {
+  // All WASM methods available (create, registerQuill, render, etc.)
+  
+  // Web-specific export methods
+  async exportToBlob(quillName: string, markdown: string, options?: RenderOptions): Promise<Blob>
+  async exportToDataUrl(quillName: string, markdown: string, options?: RenderOptions): Promise<string>
+  async exportToElement(quillName: string, markdown: string, element: HTMLElement, options?: RenderOptions): Promise<void>
+  async download(quillName: string, markdown: string, filename: string, options?: RenderOptions): Promise<void>
+}
+```
+
+**Example usage:**
+```typescript
+import { Quillmark, loaders } from '@quillmark-test/web';
+
+const engine = Quillmark.create();
+const quillJson = await loaders.fromZip(zipBlob);
+engine.registerQuill('my-template', quillJson);
+
+// Export methods are discoverable via IDE autocomplete
+await engine.exportToBlob('my-template', markdown);
+await engine.exportToDataUrl('my-template', markdown);
+await engine.exportToElement('my-template', markdown, preview);
+await engine.download('my-template', markdown, 'output.pdf');
+```
+
+### 5. Grouped Exports
+
+For better discoverability and organization, utilities are also available as grouped exports:
+
+```typescript
+import { loaders, exporters, utils } from '@quillmark-test/web';
+
+// Loaders
+await loaders.fromZip(zipBlob);
+
+// Exporters (functional API)
+await exporters.toBlob(engine, 'my-quill', markdown);
+await exporters.toDataUrl(engine, 'my-quill', markdown);
+await exporters.toElement(engine, 'my-quill', markdown, element);
+exporters.download(blob, 'output.pdf');
+
+// Utilities
+utils.detectBinaryFile('file.png');
+utils.debounce(handler, 300);
 ```
 
 ---
@@ -392,10 +419,10 @@ export interface FetchDirectoryOptions {
 
 ## Usage Examples
 
-### Example 1: Load Quill from Zip File
+### Example 1: Load Quill from Zip File (OOP API - Recommended)
 
 ```typescript
-import { Quillmark, fromZip, renderToBlob, downloadArtifact } from '@quillmark-test/web';
+import { Quillmark, loaders } from '@quillmark-test/web';
 
 // User uploads a .zip file
 const fileInput = document.querySelector<HTMLInputElement>('#quill-upload');
@@ -404,37 +431,32 @@ fileInput?.addEventListener('change', async (e) => {
   if (!file) return;
 
   try {
-    // Load Quill from zip
-    const quillJson = await fromZip(file);
+    // Load Quill from zip using grouped loaders
+    const quillJson = await loaders.fromZip(file);
     
     // Register with engine
     const engine = Quillmark.create();
     engine.registerQuill('uploaded-template', quillJson);
     
-    // Render markdown
+    // Export and download using clean OOP methods
     const markdown = '# Hello World\n\nMy first document!';
-    const blob = await renderToBlob(engine, 'uploaded-template', markdown, { format: 'pdf' });
-    
-    // Download
-    downloadArtifact(blob, 'output.pdf');
+    await engine.download('uploaded-template', markdown, 'output.pdf', { format: 'pdf' });
   } catch (error) {
     console.error('Failed to load Quill:', error);
   }
 });
 ```
 
-### Example 2: Real-time SVG Preview
+### Example 2: Real-time SVG Preview (OOP API)
 
 ```typescript
-import { Quillmark, fromDirectory, renderToElement } from '@quillmark-test/web';
+import { Quillmark, loaders, utils } from '@quillmark-test/web';
 
 async function setupEditor() {
   // Load Quill from server
-  const quillJson = await fromDirectory('/templates/letter', [
-    'Quill.toml',
-    'glue.typ',
-    'assets/logo.png'
-  ]);
+  const response = await fetch('/quills/letter.zip');
+  const zipBlob = await response.blob();
+  const quillJson = await loaders.fromZip(zipBlob);
   
   const engine = Quillmark.create();
   engine.registerQuill('letter', quillJson);
@@ -443,10 +465,10 @@ async function setupEditor() {
   const editor = document.querySelector<HTMLTextAreaElement>('#editor');
   const preview = document.querySelector<HTMLDivElement>('#preview');
   
-  editor?.addEventListener('input', debounce(async () => {
+  // Use grouped utils for debounce
+  editor?.addEventListener('input', utils.debounce(async () => {
     try {
-      await renderToElement(
-        engine,
+      await engine.exportToElement(
         'letter',
         editor.value,
         preview!,
@@ -457,55 +479,55 @@ async function setupEditor() {
     }
   }, 300));
 }
-
-// Helper: Simple debounce
-function debounce<T extends (...args: any[]) => void>(fn: T, ms: number) {
-  let timeout: number;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = window.setTimeout(() => fn(...args), ms);
-  };
-}
 ```
 
-### Example 3: Directory Upload
+### Example 3: Functional API (Alternative)
+
+For those who prefer a functional style, the standalone functions are still available:
 
 ```typescript
-import { Quillmark, fromFiles } from '@quillmark-test/web';
+import { Quillmark, loaders, exporters } from '@quillmark-test/web';
 
-const dirInput = document.querySelector<HTMLInputElement>('#directory-upload');
-dirInput?.setAttribute('webkitdirectory', '');
-
-dirInput?.addEventListener('change', async (e) => {
-  const files = (e.target as HTMLInputElement).files;
-  if (!files) return;
-
-  const quillJson = await fromFiles(files);
+async function renderDocument() {
+  const response = await fetch('/quills/my-template.zip');
+  const zipBlob = await response.blob();
+  const quillJson = await loaders.fromZip(zipBlob);
   
   const engine = Quillmark.create();
-  engine.registerQuill('user-template', quillJson);
+  engine.registerQuill('my-template', quillJson);
   
-  console.log('Template loaded:', engine.listQuills());
-});
+  const markdown = '# Hello World';
+  
+  // Use exporters group for functional API
+  const blob = await exporters.toBlob(engine, 'my-template', markdown, { format: 'pdf' });
+  exporters.download(blob, 'output.pdf');
+}
 ```
 
 ### Example 4: Drop Down to WASM API
 
 ```typescript
-import { Quillmark, renderToBlob } from '@quillmark-test/web';
+import { Quillmark, loaders } from '@quillmark-test/web';
+
+const response = await fetch('/quills/my-template.zip');
+const zipBlob = await response.blob();
+const quillJson = await loaders.fromZip(zipBlob);
+
+const engine = Quillmark.create();
+engine.registerQuill('my-template', quillJson);
 
 // Use helper for common case
-const blob = await renderToBlob(engine, 'my-quill', markdown);
+const blob = await engine.exportToBlob('my-template', markdown);
 
 // Drop down to WASM API for advanced use
-const result = engine.render('my-quill', markdown, {
+const result = engine.render('my-template', markdown, {
   format: 'pdf',
   assets: {
     'custom-font.ttf': new Uint8Array([...])
   }
 });
 
-// Mix and match as needed
+// Access detailed diagnostics
 for (const warning of result.warnings) {
   console.warn(`[${warning.severity}] ${warning.message}`);
 }
@@ -513,14 +535,42 @@ for (const warning of result.warnings) {
 
 ### Example 5: Current Demo Simplified
 
-Here's how the existing demo (`src/main.ts`) would look with the web library:
+The playground demo (`src/main.ts`) now uses the improved API:
 
-**Before (current `src/main.ts` - ~250 lines):**
+**Current implementation (using new OOP API):**
 ```typescript
-// Manually construct file list
-const USAF_MEMO_FILES = [/* 20+ file paths */];
+import { Quillmark, loaders, utils } from './lib';
 
-// Helper functions for reading files
+async function init() {
+  // Load Quill from zip using grouped loaders
+  const response = await fetch('/quills/usaf_memo.zip');
+  const zipBlob = await response.blob();
+  const quillJson = await loaders.fromZip(zipBlob);
+  
+  const engine = Quillmark.create();
+  engine.registerQuill('usaf_memo', quillJson);
+  
+  const editor = document.querySelector('#editor');
+  const preview = document.querySelector('#preview');
+  
+  // Live preview using engine.exportToElement
+  editor.addEventListener('input', utils.debounce(async () => {
+    await engine.exportToElement('usaf_memo', editor.value, preview, { format: 'svg' });
+  }, 50));
+  
+  // Download using engine.download
+  downloadBtn.addEventListener('click', async () => {
+    await engine.download('usaf_memo', editor.value, 'output.pdf', { format: 'pdf' });
+  });
+}
+```
+
+**Benefits of the new API:**
+- ✅ Cleaner imports - one `Quillmark` import gets you most functionality
+- ✅ Better discoverability - methods discoverable via IDE autocomplete
+- ✅ Less verbose - `engine.exportToBlob()` vs `exporters.toBlob(engine, ...)`
+- ✅ Grouped utilities - clear organization with `loaders`, `exporters`, `utils`
+
 async function readTextFile(path: string): Promise<string> { /* ... */ }
 async function readBinaryFile(path: string): Promise<number[]> { /* ... */ }
 function insertPath(root: any, parts: string[], value: any) { /* ... */ }
@@ -577,38 +627,55 @@ async function init() {
 
 ## Re-Export Strategy
 
-The package re-exports all WASM APIs to maintain full compatibility:
+The package extends and re-exports the WASM API to maintain full compatibility while adding web-specific enhancements:
 
 ```typescript
-// Re-export WASM core
-export { Quillmark } from '@quillmark-test/wasm';
+// Enhanced Quillmark class (extends WASM Quillmark)
+import { Quillmark as WasmQuillmark, Quill } from '@quillmark-test/wasm';
+import { exportToBlob, exportToDataUrl, exportToElement, download } from './exporters';
 
-// Re-export WASM types
-export type {
-  RenderOptions,
-  RenderResult,
-  Artifact,
-  Diagnostic,
-  Location,
-  QuillmarkError
-} from '@quillmark-test/wasm';
+class Quillmark extends WasmQuillmark {
+  async exportToBlob(quillName: string, markdown: string, options?: RenderOptions): Promise<Blob> { ... }
+  async exportToDataUrl(quillName: string, markdown: string, options?: RenderOptions): Promise<string> { ... }
+  async exportToElement(quillName: string, markdown: string, element: HTMLElement, options?: RenderOptions): Promise<void> { ... }
+  async download(quillName: string, markdown: string, filename: string, options?: RenderOptions): Promise<void> { ... }
+}
 
-// Export web utilities
-export { fromZip, fromFiles, fromDirectory } from './loaders';
+export { Quillmark, Quill };
+
+// Export loaders
+export { fromZip } from './loaders';
+
+// Export exporters (new names + backward compatible aliases)
 export { 
-  renderToBlob, 
-  renderToDataUrl, 
-  renderToElement,
-  downloadArtifact 
-} from './renderers';
-export { detectBinaryFile, buildQuillJson } from './utils';
+  exportToBlob, 
+  exportToDataUrl, 
+  exportToElement,
+  download,
+  // Backward compatibility
+  exportToBlob as renderToBlob,
+  exportToDataUrl as renderToDataUrl,
+  exportToElement as renderToElement,
+  download as downloadArtifact
+} from './exporters';
 
-// Export web types
-export type { QuillJson, FileTree, FileNode, QuillMetadata } from './types';
+// Export utilities
+export { detectBinaryFile, debounce } from './utils';
+
+// Grouped exports for better discoverability
+export const loaders = { fromZip };
+export const exporters = { toBlob: exportToBlob, toDataUrl: exportToDataUrl, toElement: exportToElement, download };
+export const utils = { detectBinaryFile, debounce };
+
+// Export types
+export type { QuillJson, FileTree, FileNode, QuillMetadata, RenderOptions } from './types';
 ```
 
 **Benefits of this approach:**
 - Users import one package: `@quillmark-test/web`
+- Enhanced Quillmark class with web-specific methods
+- Grouped exports for better discoverability (`loaders`, `exporters`, `utils`)
+- Backward compatibility with old function names
 - Can use helpers or drop down to WASM anytime
 - No version mismatches between packages
 - Tree-shaking works correctly
@@ -619,22 +686,22 @@ export type { QuillJson, FileTree, FileNode, QuillMetadata } from './types';
 
 ### Minimal Dependencies
 
-The implementation should minimize external dependencies:
+The implementation minimizes external dependencies:
 
 **Required:**
 - `@quillmark-test/wasm@^0.0.35` - Peer dependency
 
-**Recommended (for zip support):**
-- `fflate` (~20KB) - Pure JS zip extraction, faster than jszip
+**Included:**
+- `fflate@^0.8.2` (~20KB) - Pure JS zip extraction, faster than jszip
 
-**Avoid:**
+**Avoided:**
 - Large libraries like jszip (slower, heavier)
 - Framework-specific dependencies
 - Polyfills (assume modern browser)
 
 ### Error Handling
 
-All utilities should provide clear, actionable errors:
+All utilities provide clear, actionable errors:
 
 ```typescript
 // ✅ Good
@@ -677,6 +744,8 @@ Target bundle size (minified + gzipped):
 - With zip support (fflate): <30KB
 - Total overhead: <35KB
 
+**Actual implementation:** ~28KB total with zip support ✅
+
 ---
 
 ## Distribution
@@ -690,9 +759,9 @@ Target bundle size (minified + gzipped):
 │   ├── index.d.ts         # TypeScript definitions
 │   └── index.cjs          # CommonJS (optional)
 ├── src/
-│   ├── index.ts           # Main entry
-│   ├── loaders.ts         # Quill loading utilities
-│   ├── renderers.ts       # Rendering helpers
+│   ├── index.ts           # Main entry with enhanced Quillmark class
+│   ├── loaders.ts         # Quill loading utilities (fromZip)
+│   ├── exporters.ts       # Export helpers (was renderers.ts)
 │   ├── utils.ts           # Shared utilities
 │   └── types.ts           # Type definitions
 ├── package.json
@@ -753,11 +822,20 @@ These should be separate packages (e.g., `@quillmark-test/react`) to keep core l
 
 The `@quillmark-test/web` package provides:
 
-✅ **Simple Quill Loading**: `fromZip()`, `fromFiles()`, `fromDirectory()`  
-✅ **Easy Rendering**: `renderToBlob()`, `renderToDataUrl()`, `renderToElement()`  
-✅ **Full WASM Access**: Re-exports all low-level APIs  
+✅ **Opinionated Quill Loading**: `loaders.fromZip()` for consistent packaging  
+✅ **Enhanced Quillmark Class**: Instance methods like `engine.exportToBlob()`, `engine.download()`  
+✅ **Grouped Utilities**: `loaders`, `exporters`, `utils` for better discoverability  
+✅ **Dual API**: Object-oriented (recommended) and functional styles  
+✅ **Full WASM Access**: Extended class maintains all WASM functionality  
 ✅ **Type Safety**: Complete TypeScript definitions  
-✅ **Small Footprint**: <35KB total  
-✅ **Framework Agnostic**: Works everywhere  
+✅ **Small Footprint**: ~28KB total with zip support  
+✅ **Framework Agnostic**: Works with vanilla JS, React, Vue, Svelte, etc.  
+✅ **Backward Compatible**: Old function names still work
+
+**Key Improvements from WEB_LIB_DESIGN_IMPROVED.md:**
+- Clearer terminology: "Export" vs "Render" for browser-specific operations
+- Better discoverability: Methods attached to Quillmark class
+- Improved organization: Grouped exports for clear categorization
+- Enhanced DX: Less to import, more intuitive method calls
 
 This design prioritizes developer experience while maintaining the flexibility and power of the underlying WASM API.
