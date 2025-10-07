@@ -66,9 +66,9 @@ Goal: Run tests and build on PRs and pushes to `main` without a big matrix.
 
 ---
 
-## Phase 6: Release Process
+## Phase 5: Release Process
 
-### 6.1 Versioning Strategy
+### 5.1 Versioning Strategy
 
 **Goal:** Semantic versioning with clear release process
 
@@ -86,7 +86,7 @@ Goal: Run tests and build on PRs and pushes to `main` without a big matrix.
   - [ ] 1.0.0 - First stable release
   - [ ] 1.x.x - Stable (SemVer compliance)
 
-### 6.2 Pre-release Checklist
+### 5.2 Pre-release Checklist
 
 **Goal:** Ensure quality before each release
 
@@ -105,7 +105,7 @@ Create `.github/PULL_REQUEST_TEMPLATE.md`:
 - `.github/PULL_REQUEST_TEMPLATE.md`
 - `RELEASING.md` (internal release process)
 
-### 6.3 NPM Publishing Setup
+### 5.3 NPM Publishing Setup
 
 **Goal:** Prepare for npm registry publication
 
