@@ -21,6 +21,11 @@ This repository contains:
 - ✅ Type-safe with complete TypeScript definitions
 - ✅ Framework agnostic - works with vanilla JS, React, Vue, Svelte, etc.
 
+## Prerequisites
+
+- **Node.js**: Version 20.0.0 or higher
+- **npm**: Version 10.0.0 or higher
+
 ## Quick Start
 
 ### Running the Playground Demo

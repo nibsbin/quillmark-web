@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Quillmark Web! This document prov
 
 ### Prerequisites
 
-- **Node.js** 18+ and npm
+- **Node.js** 20.0.0+ and npm 10.0.0+
 - A modern web browser (Chrome, Firefox, Safari, or Edge)
 
 ### Getting Started
