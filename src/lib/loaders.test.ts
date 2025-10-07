@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { fromZip } from './loaders';
-import type { unzip } from 'fflate';
 
 // Mock fflate
 vi.mock('fflate', () => ({
@@ -12,7 +11,7 @@ import { unzip as mockUnzip } from 'fflate';
 describe('fromZip', () => {
   it('should load a valid Quill zip file', async () => {
     // Mock unzip to return a valid structure
-    (mockUnzip as any).mockImplementation((data: any, callback: any) => {
+    (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
         'Quill.toml': new TextEncoder().encode('[quill]\nname = "test"'),
         'glue.typ': new TextEncoder().encode('#let content = "test"'),
@@ -34,7 +33,7 @@ describe('fromZip', () => {
 
   it('should handle binary files correctly', async () => {
     // Mock unzip with binary file
-    (mockUnzip as any).mockImplementation((data: any, callback: any) => {
+    (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
         'Quill.toml': new TextEncoder().encode('[quill]'),
         'logo.png': new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])
@@ -51,7 +50,7 @@ describe('fromZip', () => {
 
   it('should reject zip without Quill.toml', async () => {
     // Mock unzip without Quill.toml
-    (mockUnzip as any).mockImplementation((data: any, callback: any) => {
+    (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
         'glue.typ': new TextEncoder().encode('#let content = "test"')
       });
@@ -66,7 +65,7 @@ describe('fromZip', () => {
 
   it('should handle nested directories', async () => {
     // Mock unzip with nested structure
-    (mockUnzip as any).mockImplementation((data: any, callback: any) => {
+    (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
         'Quill.toml': new TextEncoder().encode('[quill]'),
         'assets/logo.png': new Uint8Array([1, 2, 3]),
@@ -86,7 +85,7 @@ describe('fromZip', () => {
 
   it('should reject invalid zip files', async () => {
     // Mock unzip error
-    (mockUnzip as any).mockImplementation((data: any, callback: any) => {
+    (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(new Error('invalid zip'), null);
     });
 
@@ -97,7 +96,7 @@ describe('fromZip', () => {
 
   it('should skip directory entries', async () => {
     // Mock unzip with directory entry
-    (mockUnzip as any).mockImplementation((data: any, callback: any) => {
+    (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
         'Quill.toml': new TextEncoder().encode('[quill]'),
         'assets/': new Uint8Array([]), // Directory entry

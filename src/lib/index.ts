@@ -6,7 +6,6 @@
  * to the underlying WASM API.
  */
 
-import { Quillmark, Quill } from '@quillmark-test/wasm';
 import { exportToBlob, exportToDataUrl, exportToElement, download as downloadBlob } from './exporters';
 import { fromZip as _fromZip } from './loaders';
 import { detectBinaryFile, debounce } from './utils';
