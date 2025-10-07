@@ -28,6 +28,105 @@ This repository contains:
 
 ## Quick Start
 
+### Installing the Library
+
+```bash
+npm install @quillmark-test/web @quillmark-test/wasm
+```
+
+> **Note:** This package is currently in development. For now, you can use it directly from this repository by building it locally.
+
+#### Building Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/nibsbin/quillmark-web.git
+cd quillmark-web
+
+# Install dependencies
+npm install
+
+# Build the library
+npm run build:lib
+```
+
+The built library will be in the `dist/` directory with ESM (`index.js`), CommonJS (`index.cjs`), and TypeScript declarations (`index.d.ts`).
+
+### Basic Usage
+
+```typescript
+import { Quillmark, fromZip, renderToBlob, downloadArtifact } from '@quillmark-test/web';
+
+async function renderDocument() {
+  // 1. Load a Quill template from a .zip file
+  const response = await fetch('/path/to/template.zip');
+  const zipBlob = await response.blob();
+  const quillJson = await fromZip(zipBlob);
+  
+  // 2. Create engine and register the template
+  const engine = Quillmark.create();
+  engine.registerQuill('my-template', quillJson);
+  
+  // 3. Render markdown to PDF
+  const markdown = '# Hello World\n\nMy first document!';
+  const pdfBlob = await renderToBlob(
+    engine, 
+    'my-template', 
+    markdown, 
+    { format: 'pdf' }
+  );
+  
+  // 4. Download the PDF
+  downloadArtifact(pdfBlob, 'output.pdf');
+}
+```
+
+### Live Preview Example
+
+```typescript
+import { Quillmark, fromZip, renderToElement, debounce } from '@quillmark-test/web';
+
+async function setupLivePreview() {
+  // Load and register template
+  const response = await fetch('/template.zip');
+  const quillJson = await fromZip(await response.blob());
+  
+  const engine = Quillmark.create();
+  engine.registerQuill('my-template', quillJson);
+  
+  // Get DOM elements
+  const editor = document.querySelector('#editor');
+  const preview = document.querySelector('#preview');
+  
+  // Render with debouncing for performance
+  const render = debounce(async () => {
+    await renderToElement(
+      engine, 
+      'my-template', 
+      editor.value, 
+      preview, 
+      { format: 'svg' }
+    );
+  }, 300);
+  
+  editor.addEventListener('input', render);
+}
+```
+
+See the [`examples/`](./examples/) directory for complete working examples.
+
+### Running the Playground Demo
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
 ### Running the Playground Demo
 
 1. **Install dependencies:**
@@ -48,58 +147,94 @@ This repository contains:
    - See real-time SVG preview on the right
    - Click "Download PDF" to get a PDF version
 
-### Using the Library in Your Project
+## API Reference
 
-The `@quillmark-test/web` library (in `src/lib/`) provides convenient utilities for working with Quillmark in browser applications.
+### Core Functions
 
-#### Basic Example: Render to PDF
+#### `fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson>`
+
+Load a Quill template from a `.zip` file. The zip must contain a `Quill.toml` file at the root.
 
 ```typescript
-import { Quillmark, fromZip, renderToBlob, downloadArtifact } from './lib';
+const response = await fetch('/template.zip');
+const quillJson = await fromZip(await response.blob());
+```
 
-async function renderDocument() {
-  // Load Quill template from zip file
-  const response = await fetch('/quills/my-template.zip');
-  const zipBlob = await response.blob();
-  const quillJson = await fromZip(zipBlob);
-  
-  // Create engine and register template
-  const engine = Quillmark.create();
-  engine.registerQuill('my-template', quillJson);
-  
-  // Render markdown to PDF
-  const markdown = '# Hello World\n\nMy first document!';
-  const pdfBlob = await renderToBlob(engine, 'my-template', markdown, { format: 'pdf' });
-  
-  // Download the PDF
-  downloadArtifact(pdfBlob, 'output.pdf');
+#### `renderToBlob(engine, quillName, markdown, options?): Promise<Blob>`
+
+Render markdown to a Blob (PDF, SVG, or text).
+
+```typescript
+const pdfBlob = await renderToBlob(engine, 'my-template', markdown, { 
+  format: 'pdf' 
+});
+```
+
+#### `renderToDataUrl(engine, quillName, markdown, options?): Promise<string>`
+
+Render markdown to a data URL for use in `<img>` tags or iframes.
+
+```typescript
+const dataUrl = await renderToDataUrl(engine, 'my-template', markdown, { 
+  format: 'svg' 
+});
+imgElement.src = dataUrl;
+```
+
+#### `renderToElement(engine, quillName, markdown, element, options?): Promise<void>`
+
+Render markdown directly into a DOM element.
+
+```typescript
+await renderToElement(engine, 'my-template', markdown, previewDiv, { 
+  format: 'svg' 
+});
+```
+
+#### `downloadArtifact(blob: Blob, filename: string): void`
+
+Trigger a browser download of a blob.
+
+```typescript
+downloadArtifact(pdfBlob, 'my-document.pdf');
+```
+
+### Utility Functions
+
+#### `debounce<T>(fn: T, wait?: number): T`
+
+Create a debounced version of a function (default wait: 250ms).
+
+```typescript
+const debouncedRender = debounce(renderPreview, 300);
+editor.addEventListener('input', debouncedRender);
+```
+
+#### `detectBinaryFile(filename: string): boolean`
+
+Check if a filename indicates a binary file.
+
+```typescript
+if (detectBinaryFile('logo.png')) {
+  // Handle as binary
 }
 ```
 
-#### Real-time SVG Preview
+For complete API documentation, see [`src/lib/README.md`](src/lib/README.md).
 
-```typescript
-import { Quillmark, fromZip, renderToElement, debounce } from './lib';
+## Using the Library in Your Project
 
-async function setupEditor() {
-  const response = await fetch('/quills/letter.zip');
-  const zipBlob = await response.blob();
-  const quillJson = await fromZip(zipBlob);
-  
-  const engine = Quillmark.create();
-  engine.registerQuill('letter', quillJson);
-  
-  const editor = document.querySelector('#editor');
-  const preview = document.querySelector('#preview');
-  
-  // Update preview as user types (debounced)
-  editor.addEventListener('input', debounce(async () => {
-    await renderToElement(engine, 'letter', editor.value, preview, { format: 'svg' });
-  }, 300));
-}
-```
+The library is framework-agnostic and works with vanilla JavaScript, React, Vue, Svelte, and other frameworks.
 
-See [`src/lib/README.md`](src/lib/README.md) for complete API documentation.
+## Using the Library in Your Project
+
+The library is framework-agnostic and works with vanilla JavaScript, React, Vue, Svelte, and other frameworks.
+
+See [`examples/`](./examples/) for complete working examples including:
+- Vanilla JavaScript integration
+- Live markdown preview
+- PDF generation and download
+- Error handling
 
 ## Project Structure
 
@@ -113,17 +248,24 @@ quillmark-web/
 │       ├── renderers.ts     # Rendering helpers
 │       ├── utils.ts         # Utility functions
 │       ├── types.ts         # TypeScript definitions
+│       ├── *.test.ts        # Unit tests
 │       └── README.md        # Library documentation
+├── examples/
+│   ├── vanilla-js/          # Vanilla JavaScript example
+│   └── README.md            # Examples documentation
 ├── public/
-│   ├── quills/              # Quill zip files
-│   │   └── usaf_memo.zip    # USAF memo template
-│   └── usaf_memo/           # Legacy: unzipped template files
+│   └── quills/              # Quill template .zip files
+├── dist/                    # Build output (git-ignored)
+│   ├── index.js             # ESM library build
+│   ├── index.cjs            # CommonJS library build
+│   ├── index.d.ts           # TypeScript declarations
+│   └── playground/          # Playground build
 ├── designs/                 # Design documents
-│   ├── WEB_LIB_DESIGN.md   # Library architecture
-│   └── WASM_DESIGN.md      # WASM API design
-├── index.html              # Playground HTML
-├── vite.config.ts          # Vite configuration
-└── package.json            # Dependencies and scripts
+├── vite.config.ts           # Vite config (playground)
+├── vite.config.lib.ts       # Vite config (library)
+├── vitest.config.ts         # Vitest config
+├── tsconfig.json            # TypeScript config (playground)
+└── tsconfig.lib.json        # TypeScript config (library)
 ```
 
 ## How It Works
@@ -178,15 +320,54 @@ Key points:
 
 ## Building for Production
 
-```bash
-# Build the playground
-npm run build
+### Build Library
 
-# Preview the production build locally
+```bash
+npm run build:lib
+```
+
+Outputs to `dist/`:
+- `index.js` - ESM format
+- `index.cjs` - CommonJS format
+- `index.d.ts` - TypeScript declarations
+- Source maps for all outputs
+
+### Build Playground
+
+```bash
+npm run build:playground
+```
+
+Outputs to `dist/playground/` and can be deployed to any static hosting service.
+
+### Build Everything
+
+```bash
+npm run build
+```
+
+Builds both the library and the playground.
+
+### Preview Production Build
+
+```bash
 npm run preview
 ```
 
-The built files will be in the `dist/` directory and can be deployed to any static hosting service.
+## Testing
+
+The library includes a comprehensive test suite using Vitest.
+
+```bash
+# Run tests once
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with UI
+npm run test:ui
+```
 
 ## Screenshots
 
