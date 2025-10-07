@@ -7,14 +7,14 @@
  */
 
 // Re-export WASM core
-export { QuillmarkEngine, Quill } from '@quillmark-test/wasm';
+export { Quillmark, Quill } from '@quillmark-test/wasm';
 
 // Re-export WASM types (if available)
 // Note: @quillmark-test/wasm may not have all types exported,
 // so we define our own for now
 
 // Export loaders
-export { fromZip, fromDirectory, fromFiles } from './loaders';
+export { fromZip } from './loaders';
 
 // Export renderers
 export { 

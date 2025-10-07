@@ -6,11 +6,11 @@ This library wraps `@quillmark-test/wasm` with high-level helpers for common fro
 
 ## Features
 
-✅ **Simple Quill Loading**: `fromZip()`, `fromFiles()`, `fromDirectory()`  
+✅ **Opinionated Quill Loading**: All Quills loaded from .zip files for consistency  
 ✅ **Easy Rendering**: `renderToBlob()`, `renderToDataUrl()`, `renderToElement()`  
 ✅ **Full WASM Access**: Re-exports all low-level APIs  
 ✅ **Type Safety**: Complete TypeScript definitions  
-✅ **Small Footprint**: ~35KB total with zip support  
+✅ **Small Footprint**: ~28KB total with zip support  
 ✅ **Framework Agnostic**: Works with vanilla JS, React, Vue, Svelte, etc.
 
 ## Installation
@@ -19,29 +19,36 @@ This library wraps `@quillmark-test/wasm` with high-level helpers for common fro
 npm install @quillmark-test/wasm @quillmark-test/web
 ```
 
+## Philosophy: Zip-Only Loading
+
+This library takes an opinionated approach: **all Quills must be loaded from .zip files**. This ensures:
+
+- 📦 **Portability**: Quills are self-contained and easy to distribute
+- 🔒 **Security**: No directory traversal or file system concerns
+- 🎯 **Simplicity**: One clear way to load templates
+- ✅ **Validation**: Zip files are validated and must contain `Quill.toml`
+
 ## Quick Start
 
 ### Load and Render a Quill
 
 ```typescript
-import { QuillmarkEngine, Quill, fromDirectory, renderToBlob, downloadArtifact } from './lib';
+import { Quillmark, Quill, fromZip, renderToBlob, downloadArtifact } from './lib';
 
 async function renderDocument() {
-  // Load Quill from server directory
-  const quillJson = await fromDirectory('/templates/usaf-memo', [
-    'Quill.toml',
-    'glue.typ',
-    'assets/logo.png'
-  ]);
+  // Load Quill from server
+  const response = await fetch('/quills/my-template.zip');
+  const zipBlob = await response.blob();
+  const quillJson = await fromZip(zipBlob);
   
   // Create engine and register
-  const engine = QuillmarkEngine.create({});
+  const engine = Quillmark.create();
   const quill = Quill.fromJson(JSON.stringify(quillJson));
   engine.registerQuill(quill);
   
   // Render to PDF
   const markdown = '# Hello World\n\nMy first document!';
-  const blob = await renderToBlob(engine, 'usaf-memo', markdown, { format: 'pdf' });
+  const blob = await renderToBlob(engine, 'my-template', markdown, { format: 'pdf' });
   
   // Download
   downloadArtifact(blob, 'output.pdf');
@@ -51,14 +58,15 @@ async function renderDocument() {
 ### Real-time SVG Preview
 
 ```typescript
-import { QuillmarkEngine, Quill, fromDirectory, renderToElement, debounce } from './lib';
+import { Quillmark, Quill, fromZip, renderToElement, debounce } from './lib';
 
 async function setupEditor() {
-  const quillJson = await fromDirectory('/templates/letter', [
-    'Quill.toml', 'glue.typ', 'assets/logo.png'
-  ]);
+  // Load Quill from zip
+  const response = await fetch('/quills/letter.zip');
+  const zipBlob = await response.blob();
+  const quillJson = await fromZip(zipBlob);
   
-  const engine = QuillmarkEngine.create({});
+  const engine = Quillmark.create();
   const quill = Quill.fromJson(JSON.stringify(quillJson));
   engine.registerQuill(quill);
   
@@ -71,31 +79,17 @@ async function setupEditor() {
 }
 ```
 
-### Load from Zip File
+### User Upload
 
 ```typescript
 import { fromZip } from './lib';
 
 const fileInput = document.querySelector('input[type="file"]');
+fileInput.accept = '.zip';
 fileInput.addEventListener('change', async (e) => {
   const zipFile = e.target.files[0];
   const quillJson = await fromZip(zipFile);
   
-  const quill = Quill.fromJson(JSON.stringify(quillJson));
-  engine.registerQuill(quill);
-});
-```
-
-### Load from Directory Upload
-
-```typescript
-import { fromFiles } from './lib';
-
-const dirInput = document.querySelector('input[type="file"]');
-dirInput.setAttribute('webkitdirectory', '');
-
-dirInput.addEventListener('change', async (e) => {
-  const quillJson = await fromFiles(e.target.files);
   const quill = Quill.fromJson(JSON.stringify(quillJson));
   engine.registerQuill(quill);
 });
@@ -107,15 +101,13 @@ dirInput.addEventListener('change', async (e) => {
 
 #### `fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson>`
 
-Load a Quill from a .zip file.
+Load a Quill from a .zip file. This is the **only** supported loading method.
 
-#### `fromDirectory(baseUrl: string, files: string[]): Promise<QuillJson>`
-
-Load a Quill by fetching files from a directory.
-
-#### `fromFiles(files: FileList | File[]): Promise<QuillJson>`
-
-Load a Quill from uploaded files (supports directory uploads).
+**Why zip-only?**
+- Ensures all Quills are packaged consistently
+- Simplifies distribution and sharing
+- Provides built-in validation (must contain Quill.toml)
+- Eliminates security concerns with directory traversal
 
 ### Renderers
 
@@ -144,6 +136,17 @@ Simple debounce function for event handlers.
 #### `detectBinaryFile(filename: string): boolean`
 
 Determine if a file should be treated as binary.
+
+## Creating Quill Zip Files
+
+To create a compatible Quill zip file:
+
+```bash
+cd your-quill-directory
+zip -r my-quill.zip . -x '*.git*' -x '.quillignore'
+```
+
+The zip file must contain `Quill.toml` at the root level.
 
 ## License
 

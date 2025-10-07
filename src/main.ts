@@ -1,40 +1,12 @@
 import { 
-  QuillmarkEngine, 
+  Quillmark, 
   Quill,
-  fromDirectory,
+  fromZip,
   renderToElement,
   renderToBlob,
   downloadArtifact,
   debounce
 } from './lib';
-
-// File list for usaf_memo Quill - directly embedded since structure is known
-const USAF_MEMO_FILES = [
-  'Quill.toml',
-  'glue.typ',
-  'usaf_memo.md',
-  'assets/CopperplateCC-Heavy.otf',
-  'assets/DejaVuSansMono-Bold.ttf',
-  'assets/DejaVuSansMono-BoldOblique.ttf',
-  'assets/DejaVuSansMono-Oblique.ttf',
-  'assets/DejaVuSansMono.ttf',
-  'assets/NimbusRomNo9L-Med.otf',
-  'assets/NimbusRomNo9L-MedIta.otf',
-  'assets/NimbusRomNo9L-Reg.otf',
-  'assets/NimbusRomNo9L-RegIta.otf',
-  'assets/dod_seal.gif',
-  'packages/tonguetoquill-usaf-memo/LICENSE',
-  'packages/tonguetoquill-usaf-memo/src/lib.typ',
-  'packages/tonguetoquill-usaf-memo/src/utils.typ',
-  'packages/tonguetoquill-usaf-memo/typst.toml',
-];
-
-// Helper to read file as text
-async function readTextFile(path: string): Promise<string> {
-  const response = await fetch(`/${path}`);
-  if (!response.ok) throw new Error(`Failed to load ${path}: ${response.statusText}`);
-  return response.text();
-}
 
 // Init app
 async function init() {
@@ -60,19 +32,23 @@ async function init() {
     statusDiv.innerHTML = `${message} <span class="loading"></span>`;
   }
 
-  let engine: QuillmarkEngine | null = null;
+  let engine: Quillmark | null = null;
 
   try {
-    // Load Quill using the new fromDirectory utility
-    const quillJson = await fromDirectory('/usaf_memo', USAF_MEMO_FILES);
+    // Load Quill from zip file using the opinionated fromZip utility
+    const response = await fetch('/quills/usaf_memo.zip');
+    if (!response.ok) {
+      throw new Error(`Failed to load Quill zip: ${response.statusText}`);
+    }
+    const zipBlob = await response.blob();
+    const quillJson = await fromZip(zipBlob);
     
     // Create engine and register Quill
-    engine = QuillmarkEngine.create({});
-    const quill = Quill.fromJson(JSON.stringify(quillJson));
-    engine.registerQuill(quill);
+    engine = Quillmark.create();
+    engine.registerQuill('usaf_memo', quillJson);
     
-    // Load default markdown
-    const defaultMarkdown = await readTextFile('usaf_memo/usaf_memo.md');
+    // Load default markdown from the zip content
+    const defaultMarkdown = quillJson.files?.['usaf_memo.md']?.contents || '# Welcome\n\nEdit this markdown to see the preview update.';
     markdownInput.value = defaultMarkdown;
     
     // Enable PDF download button

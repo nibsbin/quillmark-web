@@ -2,7 +2,7 @@
  * Rendering helper utilities
  */
 
-import type { QuillmarkEngine } from '@quillmark-test/wasm';
+import type { Quillmark } from '@quillmark-test/wasm';
 import type { RenderOptions } from './types';
 
 /**
@@ -57,24 +57,15 @@ function toUint8Array(bytesOrArtifact: any): Uint8Array {
  * window.open(url);
  */
 export async function renderToBlob(
-  engine: QuillmarkEngine,
+  engine: Quillmark,
   quillName: string,
   markdown: string,
   options?: RenderOptions
 ): Promise<Blob> {
   const format = options?.format || 'pdf';
-  const workflow = engine.loadWorkflow(quillName);
   
-  // Process through glue
-  let glueResult: any = markdown;
-  try {
-    glueResult = workflow.processGlue(markdown);
-  } catch (err) {
-    console.warn('processGlue warning:', err);
-  }
-  
-  // Render
-  const result = workflow.renderSource(glueResult, { format, ...options });
+  // Render using the Quillmark engine API
+  const result = engine.render(quillName, markdown, { format, ...options });
   
   // Extract artifact
   let artifactCandidate: any = result.artifacts;
@@ -108,7 +99,7 @@ export async function renderToBlob(
  * imgElement.src = dataUrl;
  */
 export async function renderToDataUrl(
-  engine: QuillmarkEngine,
+  engine: Quillmark,
   quillName: string,
   markdown: string,
   options?: RenderOptions
@@ -140,25 +131,16 @@ export async function renderToDataUrl(
  * await renderToElement(engine, 'my-quill', markdown, preview, { format: 'svg' });
  */
 export async function renderToElement(
-  engine: QuillmarkEngine,
+  engine: Quillmark,
   quillName: string,
   markdown: string,
   element: HTMLElement,
   options?: RenderOptions
 ): Promise<void> {
   const format = options?.format || 'svg';
-  const workflow = engine.loadWorkflow(quillName);
   
-  // Process through glue
-  let glueResult: any = markdown;
-  try {
-    glueResult = workflow.processGlue(markdown);
-  } catch (err) {
-    console.warn('processGlue warning:', err);
-  }
-  
-  // Render
-  const result = workflow.renderSource(glueResult, { format, ...options });
+  // Render using the Quillmark engine API
+  const result = engine.render(quillName, markdown, { format, ...options });
   
   // Extract artifact
   let artifactCandidate: any = result.artifacts;
