@@ -1,83 +1,187 @@
-# Quillmark Web Rendering Playground
+# Quillmark Web
 
-A web-based playground for rendering Quillmark templates using `@quillmark-test/wasm`.
+A web-based playground and utility library for rendering Quillmark templates using `@quillmark-test/wasm`.
+
+This repository contains:
+- 🎮 **Interactive Playground** - A demo application for testing Quillmark templates
+- 📦 **@quillmark-test/web Library** - Opinionated frontend utilities for integrating Quillmark into your projects
 
 ## Features
 
-- 🖋️ Interactive markdown editor
+### Playground Demo
+- 🖋️ Interactive markdown editor with live preview
 - 📄 Real-time rendering to PDF and SVG formats
-- 🎯 Pre-loaded with USAF memo template
-- 🚀 Built with Vite and TypeScript
-- 📦 Uses the official Quillmark JSON contract for loading templates
+- 🎯 Pre-loaded USAF memo template for testing
+- 🚀 Fast development with Vite and TypeScript
+
+### Library (`src/lib/`)
+- ✅ Opinionated Quill loading from `.zip` files
+- ✅ Easy rendering: `renderToBlob()`, `renderToDataUrl()`, `renderToElement()`
+- ✅ Full WASM access - re-exports all low-level APIs
+- ✅ Type-safe with complete TypeScript definitions
+- ✅ Framework agnostic - works with vanilla JS, React, Vue, Svelte, etc.
 
 ## Quick Start
 
-### Installation
+### Running the Playground Demo
 
-```bash
-npm install
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Open your browser:**
+   Navigate to http://localhost:5173
+
+4. **Try it out:**
+   - Edit the markdown in the left panel
+   - See real-time SVG preview on the right
+   - Click "Download PDF" to get a PDF version
+
+### Using the Library in Your Project
+
+The `@quillmark-test/web` library (in `src/lib/`) provides convenient utilities for working with Quillmark in browser applications.
+
+#### Basic Example: Render to PDF
+
+```typescript
+import { Quillmark, fromZip, renderToBlob, downloadArtifact } from './lib';
+
+async function renderDocument() {
+  // Load Quill template from zip file
+  const response = await fetch('/quills/my-template.zip');
+  const zipBlob = await response.blob();
+  const quillJson = await fromZip(zipBlob);
+  
+  // Create engine and register template
+  const engine = Quillmark.create();
+  engine.registerQuill('my-template', quillJson);
+  
+  // Render markdown to PDF
+  const markdown = '# Hello World\n\nMy first document!';
+  const pdfBlob = await renderToBlob(engine, 'my-template', markdown, { format: 'pdf' });
+  
+  // Download the PDF
+  downloadArtifact(pdfBlob, 'output.pdf');
+}
 ```
 
-### Development
+#### Real-time SVG Preview
 
-```bash
-npm run dev
+```typescript
+import { Quillmark, fromZip, renderToElement, debounce } from './lib';
+
+async function setupEditor() {
+  const response = await fetch('/quills/letter.zip');
+  const zipBlob = await response.blob();
+  const quillJson = await fromZip(zipBlob);
+  
+  const engine = Quillmark.create();
+  engine.registerQuill('letter', quillJson);
+  
+  const editor = document.querySelector('#editor');
+  const preview = document.querySelector('#preview');
+  
+  // Update preview as user types (debounced)
+  editor.addEventListener('input', debounce(async () => {
+    await renderToElement(engine, 'letter', editor.value, preview, { format: 'svg' });
+  }, 300));
+}
 ```
 
-Open http://localhost:5173 in your browser.
+See [`src/lib/README.md`](src/lib/README.md) for complete API documentation.
 
-### Build
+## Project Structure
 
-```bash
-npm run build
 ```
-
-The built files will be in the `dist/` directory.
-
-### Preview Production Build
-
-```bash
-npm run preview
+quillmark-web/
+├── src/
+│   ├── main.ts              # Playground demo entry point
+│   └── lib/                 # @quillmark-test/web library
+│       ├── index.ts         # Main exports
+│       ├── loaders.ts       # Quill loading utilities (fromZip)
+│       ├── renderers.ts     # Rendering helpers
+│       ├── utils.ts         # Utility functions
+│       ├── types.ts         # TypeScript definitions
+│       └── README.md        # Library documentation
+├── public/
+│   ├── quills/              # Quill zip files
+│   │   └── usaf_memo.zip    # USAF memo template
+│   └── usaf_memo/           # Legacy: unzipped template files
+├── designs/                 # Design documents
+│   ├── WEB_LIB_DESIGN.md   # Library architecture
+│   └── WASM_DESIGN.md      # WASM API design
+├── index.html              # Playground HTML
+├── vite.config.ts          # Vite configuration
+└── package.json            # Dependencies and scripts
 ```
 
 ## How It Works
 
-The playground demonstrates loading the `usaf_memo` Quill template from the local `public/usaf_memo` directory using the JSON contract format:
+The playground demonstrates the complete Quillmark workflow:
 
-1. **Loading the Quill**: The application reads all files from the local `public/usaf_memo` directory (including Quill.toml, glue.typ, assets, and packages) and constructs a JSON object following the Quillmark JSON contract specification.
+1. **Load Quill Template**: Uses `fromZip()` to load the USAF memo template from `/public/quills/usaf_memo.zip`
 
-2. **Creating the Engine**: Uses `QuillmarkEngine.create()` to initialize the WASM rendering engine.
+2. **Initialize Engine**: Creates a Quillmark WASM engine instance with `Quillmark.create()`
 
-3. **Registering the Template**: The Quill is registered with the engine via `engine.registerQuill(quill)`.
+3. **Register Template**: Registers the Quill with `engine.registerQuill(name, quillJson)`
 
-4. **Rendering**: Users can edit markdown in the editor and click "Render" to generate PDF or SVG output using the USAF memo template.
+4. **Render Content**: 
+   - Real-time SVG preview using `renderToElement()`
+   - PDF download using `renderToBlob()` + `downloadArtifact()`
 
-## JSON Contract
+## Quill JSON Contract
 
-The playground follows the canonical Quill JSON contract for loading templates. The contract specifies:
+Quill templates follow the Quillmark JSON contract format:
 
-- Root object with a `name` field
-- File entries with `contents` field (string for text files, number array for binary files)
-- Nested directory structure mirroring the file tree
-
-Example structure:
 ```javascript
 {
   name: 'usaf_memo',
   'Quill.toml': { contents: '...' },
   'glue.typ': { contents: '...' },
   'assets': {
-    'font.otf': { contents: [137, 80, 78, 71, ...] }
+    'font.otf': { contents: [137, 80, 78, 71, ...] }  // Binary files as number arrays
+  },
+  'packages': {
+    'my-package': {
+      'lib.typ': { contents: '...' }
+    }
   }
 }
 ```
 
+Key points:
+- Root object contains file tree structure
+- Text files have `contents` as strings
+- Binary files have `contents` as number arrays
+- Nested directories are nested objects
+- Must contain `Quill.toml` at the root
+
 ## Technologies
 
-- **Vite** - Fast build tool and dev server
-- **TypeScript** - Type-safe JavaScript
-- **@quillmark-test/wasm** - WebAssembly bindings for Quillmark
+- **[Vite](https://vitejs.dev/)** - Fast build tool and dev server
+- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
+- **[@quillmark-test/wasm](https://github.com/quillmark)** - WebAssembly bindings for Quillmark
+- **[fflate](https://github.com/101arrowz/fflate)** - Fast zip file extraction
 - **vite-plugin-wasm** - WASM support for Vite
+- **vite-plugin-top-level-await** - Top-level await support
+
+## Building for Production
+
+```bash
+# Build the playground
+npm run build
+
+# Preview the production build locally
+npm run preview
+```
+
+The built files will be in the `dist/` directory and can be deployed to any static hosting service.
 
 ## Screenshots
 
@@ -87,6 +191,10 @@ Example structure:
 ### SVG Rendering
 ![SVG Rendering](https://github.com/user-attachments/assets/c7648623-0056-457d-b52e-ca12c89ed571)
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+
 ## License
 
-ISC
+Apache License 2.0 - See [LICENSE](LICENSE) for details.
