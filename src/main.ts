@@ -1,6 +1,7 @@
 import { 
   Quillmark, 
   loaders,
+  exporters,
   utils
 } from './lib';
 
@@ -39,8 +40,8 @@ async function init() {
     const zipBlob = await response.blob();
     const quillJson = await loaders.fromZip(zipBlob);
     
-    // Create engine and register Quill
-    engine = Quillmark.create();
+    // Create engine and register Quill using new() API
+    engine = new Quillmark();
     engine.registerQuill('usaf_memo', quillJson);
     
     // Load default markdown from the zip content
@@ -55,11 +56,12 @@ async function init() {
     return;
   }
 
-  // Auto-render SVG when the markdown changes using engine.exportToElement
+  // Auto-render SVG when the markdown changes using exporters.toElement
   const renderSvg = async () => {
     if (!engine) return;
     try {
-      await engine.exportToElement(
+      await exporters.toElement(
+        engine,
         'usaf_memo',
         markdownInput.value,
         preview,
@@ -77,17 +79,18 @@ async function init() {
   // Initial SVG render on page load
   renderSvg().catch(err => console.error('Initial SVG render failed:', err));
 
-  // Download PDF on demand using engine.download
+  // Download PDF on demand using exporters.toBlob and exporters.download
   downloadPdfBtn?.addEventListener('click', async () => {
     if (!engine) return;
     showLoading('Rendering PDF...');
     try {
-      await engine.download(
+      const blob = await exporters.toBlob(
+        engine,
         'usaf_memo',
         markdownInput.value,
-        'render-output.pdf',
         { format: 'pdf' }
       );
+      exporters.download(blob, 'render-output.pdf');
       showStatus('Download started — check your browser downloads', 'success');
     } catch (err) {
       console.error('PDF render/download error:', err);
