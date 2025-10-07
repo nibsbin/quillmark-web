@@ -51,7 +51,6 @@ Keep coverage goals informal for now — we want reliable tests, not a strict % 
 Goal: Help users get started quickly.
 
 - [ ] Update `README.md` with install, quick-start, and a minimal example that shows loading a quill and rendering it.
-- [ ] Add a small `examples/vanilla-js/` (single HTML + script) demonstrating basic usage.
 - [ ] Keep API docs light — enhance inline JSDoc comments and add examples where helpful.
 
 ---
