@@ -1,5 +1,8 @@
 
-#set text(font:("Arial", "times", "sans-serif"))
+#set text(font:("Figtree"))
+
+// Advanced: Use show filter to color text
+#show regex("(?i)taro"): it => text(fill: purple)[#it]
 
 // When using filters in markup mode,
 // add `#` before the template expression to enter code mode.
@@ -11,7 +14,7 @@
 
 #{{ body | Content }}
 
-// Present each sub-document
+// Present each sub-document programatically
 {% for quote in quotes %}
 *#{{ quote.author | String }}*: _#{{ quote.body | Content }}_
 {% endfor %}

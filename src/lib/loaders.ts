@@ -59,12 +59,41 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
         return;
       }
       
+      // Check if Quill.toml is nested inside a single top-level folder
+      let pathPrefix = '';
+      const hasQuillTomlAtRoot = Object.keys(unzipped).some(path => path === 'Quill.toml' || path === 'Quill.toml/');
+      
+      if (!hasQuillTomlAtRoot) {
+        // Find all top-level entries (files and folders)
+        const topLevelEntries = new Set<string>();
+        for (const path of Object.keys(unzipped)) {
+          const firstSlash = path.indexOf('/');
+          if (firstSlash > 0) {
+            topLevelEntries.add(path.substring(0, firstSlash));
+          }
+        }
+        
+        // If there's only one top-level folder, check if it contains Quill.toml
+        if (topLevelEntries.size === 1) {
+          const [topFolder] = Array.from(topLevelEntries);
+          const nestedQuillToml = `${topFolder}/Quill.toml`;
+          if (unzipped[nestedQuillToml]) {
+            pathPrefix = topFolder + '/';
+          }
+        }
+      }
+      
       // Process each file in the zip
       for (const [path, fileData] of Object.entries(unzipped)) {
         // Skip directories (they end with /)
         if (path.endsWith('/')) continue;
         
-        const parts = path.split('/');
+        // Skip files outside the path prefix
+        if (pathPrefix && !path.startsWith(pathPrefix)) continue;
+        
+        // Remove the path prefix if it exists
+        const relativePath = pathPrefix ? path.substring(pathPrefix.length) : path;
+        const parts = relativePath.split('/');
         
         if (detectBinaryFile(path)) {
           // Binary file - store as number array

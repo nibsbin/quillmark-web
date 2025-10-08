@@ -112,4 +112,43 @@ describe('fromZip', () => {
     // Should not have the directory entry itself
     expect(result.files.assets).not.toHaveProperty('contents');
   });
+
+  it('should handle Quill.toml nested in a single top-level folder', async () => {
+    // Mock unzip with Quill.toml nested in a single folder
+    (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
+      callback(null, {
+        'my-quill/Quill.toml': new TextEncoder().encode('[quill]\nname = "nested"'),
+        'my-quill/glue.typ': new TextEncoder().encode('#let content = "test"'),
+        'my-quill/assets/logo.png': new Uint8Array([1, 2, 3])
+      });
+    });
+
+    const zipBuffer = new ArrayBuffer(100);
+    const result = await fromZip(zipBuffer);
+
+    // Files should be at root level (prefix stripped)
+    expect(result.files).toHaveProperty('Quill.toml');
+    expect(result.files['Quill.toml'].contents).toContain('[quill]');
+    expect(result.files).toHaveProperty('glue.typ');
+    expect(result.files).toHaveProperty('assets');
+    expect(result.files.assets).toHaveProperty('logo.png');
+  });
+
+  it('should not strip prefix when multiple top-level folders exist', async () => {
+    // Mock unzip with multiple top-level folders
+    (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
+      callback(null, {
+        'folder1/file1.txt': new TextEncoder().encode('file1'),
+        'folder2/Quill.toml': new TextEncoder().encode('[quill]'),
+        'folder2/glue.typ': new TextEncoder().encode('#let x = 1')
+      });
+    });
+
+    const zipBuffer = new ArrayBuffer(100);
+
+    // Should reject since Quill.toml is not at root and there are multiple top-level folders
+    await expect(fromZip(zipBuffer)).rejects.toThrow(
+      'Quill.toml not found in zip file'
+    );
+  });
 });
