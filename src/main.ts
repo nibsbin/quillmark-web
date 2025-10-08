@@ -9,6 +9,7 @@ import {
 async function init() {
   const markdownInput = document.getElementById('markdown-input') as HTMLTextAreaElement | null;
   const downloadPdfBtn = document.getElementById('download-pdf-btn') as HTMLButtonElement | null;
+  const quillSelect = document.getElementById('quill-select') as HTMLSelectElement | null;
   const preview = document.getElementById('preview') as HTMLDivElement | null;
   const statusDiv = document.getElementById('status') as HTMLDivElement | null;
 
@@ -31,30 +32,46 @@ async function init() {
 
   let engine: Quillmark | null = null;
 
-  try {
-    // Load Quill from zip file using the opinionated loaders.fromZip utility
-    const response = await fetch('/quills/usaf_memo.zip');
-    if (!response.ok) {
-      throw new Error(`Failed to load Quill zip: ${response.statusText}`);
+  // Helper to load & register a quill zip by filename (e.g. 'usaf_memo.zip' or 'taro.zip')
+  async function loadQuillByZipFilename(filename: string) {
+    try {
+      showLoading(`Loading template ${filename}...`);
+      const response = await fetch(`/quills/${filename}`);
+      if (!response.ok) throw new Error(`Failed to fetch ${filename}: ${response.statusText}`);
+      const zipBlob = await response.blob();
+      const quillJson = await loaders.fromZip(zipBlob);
+
+      // Create engine if needed
+      if (!engine) engine = new Quillmark();
+
+      // Register under a stable name derived from filename (strip extension)
+      const name = filename.replace(/\.zip$/i, '');
+  engine.registerQuill(name, quillJson as any);
+
+      // Try to pick a sensible default markdown file from the quill
+      const candidateKeys = Object.keys(quillJson.files || {});
+      // Prefer <name>.md, fallback to first markdown-like file, else a default
+      const preferred = `${name}.md`;
+      let defaultMarkdown = '# Welcome\n\nEdit this markdown to see the preview update.';
+      if (quillJson.files && quillJson.files[preferred]) {
+        defaultMarkdown = quillJson.files[preferred].contents;
+      } else {
+        const mdKey = candidateKeys.find(k => k.toLowerCase().endsWith('.md'));
+        if (mdKey && quillJson.files[mdKey]) defaultMarkdown = quillJson.files[mdKey].contents;
+      }
+
+      if (markdownInput) markdownInput.value = defaultMarkdown;
+      if (downloadPdfBtn) downloadPdfBtn.disabled = false;
+      showStatus(`Loaded template: ${name}`, 'success');
+    } catch (err) {
+      console.error('Initialization error:', err);
+      showStatus(`Error: ${err instanceof Error ? err.message : String(err)}`, 'error');
     }
-    const zipBlob = await response.blob();
-    const quillJson = await loaders.fromZip(zipBlob);
-    
-    // Create engine and register Quill using new() API
-    engine = new Quillmark();
-    engine.registerQuill('usaf_memo', quillJson);
-    
-    // Load default markdown from the zip content
-    const defaultMarkdown = quillJson.files?.['usaf_memo.md']?.contents || '# Welcome\n\nEdit this markdown to see the preview update.';
-    markdownInput.value = defaultMarkdown;
-    
-    // Enable PDF download button
-    if (downloadPdfBtn) downloadPdfBtn.disabled = false;
-  } catch (error) {
-    console.error('Initialization error:', error);
-    showStatus(`Error: ${error instanceof Error ? error.message : String(error)}`, 'error');
-    return;
   }
+
+  // Load initial quill based on select value (or default to usaf_memo.zip)
+  const initial = quillSelect?.value || 'usaf_memo.zip';
+  await loadQuillByZipFilename(initial);
 
   // Auto-render SVG when the markdown changes using exporters.toElement
   const renderSvg = async () => {
@@ -74,6 +91,14 @@ async function init() {
 
   const debouncedRender = utils.debounce(renderSvg, 50);
   markdownInput.addEventListener('input', debouncedRender);
+
+  // Re-render when the selected quill changes: load new template and render
+  quillSelect?.addEventListener('change', async (e) => {
+    const sel = (e.target as HTMLSelectElement).value;
+    await loadQuillByZipFilename(sel);
+    // Re-render with the new quill
+    await renderSvg();
+  });
 
   // Initial SVG render on page load
   renderSvg().catch(err => console.error('Initial SVG render failed:', err));
