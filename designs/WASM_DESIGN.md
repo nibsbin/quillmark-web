@@ -190,7 +190,7 @@ The main WASM interface provides a single class for all operations:
 ```typescript
 class Quillmark {
   /// Create a new Quillmark engine
-  static create(): Quillmark;
+  constructor();
 
   /// Register a Quill template bundle
   /// Accepts either a JSON string or a JavaScript object representing the Quill file tree
@@ -201,7 +201,8 @@ class Quillmark {
   renderGlue(quillName: string, markdown: string): string;
 
   /// Render markdown to final artifacts (PDF, SVG, TXT)
-  render(quillName: string, markdown: string, options?: RenderOptions): RenderResult;
+  /// Uses options.quillName if provided, otherwise infers from the markdown's QUILL frontmatter field
+  render(markdown: string, options?: RenderOptions): RenderResult;
 
   /// List registered Quill names
   listQuills(): string[];
@@ -217,6 +218,7 @@ class Quillmark {
 interface RenderOptions {
   format?: 'pdf' | 'svg' | 'txt';
   assets?: Record<string, Uint8Array>;
+  quillName?: string;  // Optional: overrides or fills in for the markdown's QUILL frontmatter field
 }
 
 interface RenderResult {
@@ -300,7 +302,7 @@ All errors are thrown as JavaScript exceptions containing serialized `QuillmarkE
 ### Error Structure
 ```typescript
 try {
-  engine.render('my-quill', markdown, options);
+  engine.render(markdown, options);
 } catch (error) {
   const quillError = error as QuillmarkError;
   
@@ -340,6 +342,7 @@ try {
    - Quill not found
    - Invalid render options
    - Memory allocation failures
+   - Missing `QUILL: <quill_name>` frontmatter field when using `render()` without `quillName` option
 
 ---
 
@@ -351,7 +354,7 @@ try {
 import { Quillmark } from '@quillmark/wasm';
 
 // Create engine
-const engine = Quillmark.create();
+const engine = new Quillmark();
 
 // Register a simple Quill
 const quillJson = {
@@ -367,8 +370,9 @@ const quillJson = {
 
 engine.registerQuill('simple-letter', quillJson);
 
-// Render markdown
+// Render markdown with QUILL frontmatter field
 const markdown = `---
+QUILL: simple-letter
 title: "My Letter"
 ---
 
@@ -376,7 +380,7 @@ title: "My Letter"
 
 This is a simple letter.`;
 
-const result = engine.render('simple-letter', markdown);
+const result = engine.render(markdown);
 
 // Access the PDF bytes
 const pdfArtifact = result.artifacts.find(a => a.format === 'pdf');
@@ -394,7 +398,14 @@ if (pdfArtifact) {
 // Load custom font
 const fontBytes = await fetch('/fonts/custom-font.ttf').then(r => r.arrayBuffer());
 
-const result = engine.render('my-quill', markdown, {
+const markdown = `---
+QUILL: my-quill
+---
+
+# Document with custom font
+`;
+
+const result = engine.render(markdown, {
   format: 'pdf',
   assets: {
     'custom-font.ttf': new Uint8Array(fontBytes)
@@ -406,21 +417,51 @@ const result = engine.render('my-quill', markdown, {
 
 ```typescript
 // Render to multiple formats
-const pdfResult = engine.render('my-quill', markdown, { format: 'pdf' });
-const svgResult = engine.render('my-quill', markdown, { format: 'svg' });
-const txtResult = engine.render('my-quill', markdown, { format: 'txt' });
+const markdown = `---
+QUILL: my-quill
+---
+
+# My Document
+`;
+
+const pdfResult = engine.render(markdown, { format: 'pdf' });
+const svgResult = engine.render(markdown, { format: 'svg' });
+const txtResult = engine.render(markdown, { format: 'txt' });
+```
+
+### Using quillName Option (Explicit Quill Selection)
+
+```typescript
+// When you want to override the QUILL frontmatter field or markdown doesn't have one
+const markdownWithoutQuill = `---
+title: "My Letter"
+---
+
+# Hello World
+
+This is a simple letter.`;
+
+const result = engine.render(markdownWithoutQuill, { quillName: 'simple-letter' });
 ```
 
 ### Debugging with Template Source
 
 ```typescript
+const markdown = `---
+QUILL: my-quill
+title: "Test Document"
+---
+
+# Content
+`;
+
 try {
   // Get the generated template source for debugging
   const glueSource = engine.renderGlue('my-quill', markdown);
   console.log('Generated template:', glueSource);
   
   // Then render normally
-  const result = engine.render('my-quill', markdown);
+  const result = engine.render(markdown);
 } catch (error) {
   console.error('Template generation failed:', error);
 }
