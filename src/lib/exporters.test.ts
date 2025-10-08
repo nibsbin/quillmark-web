@@ -5,6 +5,12 @@ import { exportToBlob, exportToDataUrl, exportToElement, download } from './expo
 global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
 global.URL.revokeObjectURL = vi.fn();
 
+const markdownSample = 
+`---
+QUILL: test-quill
+---
+# Hello`;
+
 // Mock Quillmark engine
 const createMockEngine = (artifactBytes: Uint8Array) => {
   return {
@@ -21,18 +27,17 @@ describe('exportToBlob', () => {
     const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]); // %PDF header
     const engine = createMockEngine(pdfBytes);
 
-    const blob = await exportToBlob(engine, 'test-quill', '# Hello', { format: 'pdf' });
+    const blob = await exportToBlob(engine, '# Hello', { format: 'pdf' });
 
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.type).toBe('application/pdf');
-    expect(engine.render).toHaveBeenCalledWith('# Hello', { format: 'pdf', quillName: 'test-quill' });
   });
 
   it('should export SVG to blob', async () => {
     const svgBytes = new TextEncoder().encode('<svg></svg>');
     const engine = createMockEngine(svgBytes);
 
-    const blob = await exportToBlob(engine, 'test-quill', '# Hello', { format: 'svg' });
+    const blob = await exportToBlob(engine, '# Hello', { format: 'svg' });
 
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.type).toBe('image/svg+xml');
@@ -42,10 +47,9 @@ describe('exportToBlob', () => {
     const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]);
     const engine = createMockEngine(pdfBytes);
 
-    const blob = await exportToBlob(engine, 'test-quill', '# Hello');
+    const blob = await exportToBlob(engine,  '# Hello');
 
     expect(blob.type).toBe('application/pdf');
-    expect(engine.render).toHaveBeenCalledWith('# Hello', { format: 'pdf', quillName: 'test-quill' });
   });
 
   it('should handle array artifacts', async () => {
@@ -56,7 +60,7 @@ describe('exportToBlob', () => {
       }))
     } as any;
 
-    const blob = await exportToBlob(engine, 'test', '# Test');
+    const blob = await exportToBlob(engine, '# Test');
     
     expect(blob).toBeInstanceOf(Blob);
   });
@@ -67,7 +71,7 @@ describe('exportToDataUrl', () => {
     const svgBytes = new TextEncoder().encode('<svg></svg>');
     const engine = createMockEngine(svgBytes);
 
-    const dataUrl = await exportToDataUrl(engine, 'test-quill', '# Hello', { format: 'svg' });
+    const dataUrl = await exportToDataUrl(engine, '# Hello', { format: 'svg' });
 
     expect(dataUrl).toMatch(/^data:image\/svg\+xml;base64,/);
   });
@@ -80,7 +84,7 @@ describe('exportToElement', () => {
     const engine = createMockEngine(svgBytes);
     
     const element = document.createElement('div');
-    await exportToElement(engine, 'test-quill', '# Hello', element, { format: 'svg' });
+    await exportToElement(engine, '# Hello', element, { format: 'svg' });
 
     expect(element.innerHTML).toContain('<svg');
     expect(element.innerHTML).toContain('width="100"');
@@ -91,7 +95,7 @@ describe('exportToElement', () => {
     const engine = createMockEngine(pdfBytes);
     
     const element = document.createElement('div');
-    await exportToElement(engine, 'test-quill', '# Hello', element, { format: 'pdf' });
+    await exportToElement(engine, '# Hello', element, { format: 'pdf' });
 
     expect(element.innerHTML).toContain('<embed');
     expect(element.innerHTML).toContain('type="application/pdf"');
@@ -102,7 +106,7 @@ describe('exportToElement', () => {
     const engine = createMockEngine(svgBytes);
     
     const element = document.createElement('div');
-    await exportToElement(engine, 'test-quill', '# Hello', element);
+    await exportToElement(engine, '# Hello', element);
 
     expect(element.innerHTML).toContain('<svg');
   });

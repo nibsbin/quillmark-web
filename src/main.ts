@@ -62,7 +62,6 @@ async function init() {
     try {
       await exporters.toElement(
         engine,
-        'usaf_memo',
         markdownInput.value,
         preview,
         { format: 'svg' }
@@ -86,7 +85,6 @@ async function init() {
     try {
       const blob = await exporters.toBlob(
         engine,
-        'usaf_memo',
         markdownInput.value,
         { format: 'pdf' }
       );

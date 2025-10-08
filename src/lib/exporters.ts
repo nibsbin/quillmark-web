@@ -46,26 +46,24 @@ function toUint8Array(bytesOrArtifact: any): Uint8Array {
  * Export rendered markdown to a Blob
  * 
  * @param engine - Quillmark engine instance
- * @param quillName - Name of the registered Quill
  * @param markdown - Markdown content to render
  * @param options - Render options (format, assets, etc.)
  * @returns Blob containing the rendered output
  * 
  * @example
- * const blob = await exportToBlob(engine, 'my-quill', markdown, { format: 'pdf' });
+ * const blob = await exportToBlob(engine, markdown, { format: 'pdf' });
  * const url = URL.createObjectURL(blob);
  * window.open(url);
  */
 export async function exportToBlob(
   engine: Quillmark,
-  quillName: string,
   markdown: string,
   options?: RenderOptions
 ): Promise<Blob> {
   const format = options?.format || 'pdf';
   
   // Render using the Quillmark engine API
-  const result = engine.render(markdown, { format, ...options, quillName });
+  const result = engine.render(markdown, { format, ...options });
   
   // Extract artifact
   let artifactCandidate: any = result.artifacts;
@@ -89,22 +87,20 @@ export async function exportToBlob(
  * Export rendered markdown to a data URL
  * 
  * @param engine - Quillmark engine instance
- * @param quillName - Name of the registered Quill
  * @param markdown - Markdown content to render
  * @param options - Render options (format, assets, etc.)
  * @returns Data URL string
  * 
  * @example
- * const dataUrl = await exportToDataUrl(engine, 'my-quill', markdown, { format: 'svg' });
+ * const dataUrl = await exportToDataUrl(engine, markdown, { format: 'svg' });
  * imgElement.src = dataUrl;
  */
 export async function exportToDataUrl(
   engine: Quillmark,
-  quillName: string,
   markdown: string,
   options?: RenderOptions
 ): Promise<string> {
-  const blob = await exportToBlob(engine, quillName, markdown, options);
+  const blob = await exportToBlob(engine, markdown, options);
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result as string);
@@ -121,18 +117,16 @@ export async function exportToDataUrl(
  * For TXT: Displays as pre-formatted text
  * 
  * @param engine - Quillmark engine instance
- * @param quillName - Name of the registered Quill
  * @param markdown - Markdown content to render
  * @param element - Target HTML element
  * @param options - Render options (format, assets, etc.)
  * 
  * @example
  * const preview = document.getElementById('preview');
- * await exportToElement(engine, 'my-quill', markdown, preview, { format: 'svg' });
+ * await exportToElement(engine, markdown, preview, { format: 'svg' });
  */
 export async function exportToElement(
   engine: Quillmark,
-  quillName: string,
   markdown: string,
   element: HTMLElement,
   options?: RenderOptions
@@ -140,7 +134,7 @@ export async function exportToElement(
   const format = options?.format || 'svg';
   
   // Render using the Quillmark engine API
-  const result = engine.render(markdown, { format, ...options, quillName });
+  const result = engine.render(markdown, { format, ...options });
   
   // Extract artifact
   let artifactCandidate: any = result.artifacts;
@@ -175,7 +169,7 @@ export async function exportToElement(
  * @param filename - Name for the downloaded file
  * 
  * @example
- * const blob = await exportToBlob(engine, 'my-quill', markdown);
+ * const blob = await exportToBlob(engine, markdown);
  * download(blob, 'output.pdf');
  */
 export function download(blob: Blob, filename: string): void {
