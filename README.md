@@ -16,7 +16,7 @@ This repository contains:
 
 ### Library (`src/lib/`)
 - ✅ Opinionated Quill loading from `.zip` files
-- ✅ Easy rendering: `renderToBlob()`, `renderToDataUrl()`, `renderToElement()`
+- ✅ Easy rendering: `exporters.toBlob()`, `exporters.toDataUrl()`, `exporters.toElement()`
 - ✅ Full WASM access - re-exports all low-level APIs
 - ✅ Type-safe with complete TypeScript definitions
 - ✅ Framework agnostic - works with vanilla JS, React, Vue, Svelte, etc.
@@ -55,46 +55,46 @@ The `@quillmark-test/web` library (in `src/lib/`) provides convenient utilities 
 #### Basic Example: Render to PDF
 
 ```typescript
-import { Quillmark, fromZip, renderToBlob, downloadArtifact } from './lib';
+import { Quillmark, loaders, exporters } from '@quillmark-test/web';
 
 async function renderDocument() {
   // Load Quill template from zip file
   const response = await fetch('/quills/my-template.zip');
   const zipBlob = await response.blob();
-  const quillJson = await fromZip(zipBlob);
+  const quillJson = await loaders.fromZip(zipBlob);
   
   // Create engine and register template
-  const engine = Quillmark.create();
+  const engine = new Quillmark();
   engine.registerQuill('my-template', quillJson);
   
   // Render markdown to PDF
   const markdown = '# Hello World\n\nMy first document!';
-  const pdfBlob = await renderToBlob(engine, 'my-template', markdown, { format: 'pdf' });
+  const pdfBlob = await exporters.toBlob(engine, 'my-template', markdown, { format: 'pdf' });
   
   // Download the PDF
-  downloadArtifact(pdfBlob, 'output.pdf');
+  exporters.download(pdfBlob, 'output.pdf');
 }
 ```
 
 #### Real-time SVG Preview
 
 ```typescript
-import { Quillmark, fromZip, renderToElement, debounce } from './lib';
+import { Quillmark, loaders, exporters, utils } from '@quillmark-test/web';
 
 async function setupEditor() {
   const response = await fetch('/quills/letter.zip');
   const zipBlob = await response.blob();
-  const quillJson = await fromZip(zipBlob);
+  const quillJson = await loaders.fromZip(zipBlob);
   
-  const engine = Quillmark.create();
+  const engine = new Quillmark();
   engine.registerQuill('letter', quillJson);
   
   const editor = document.querySelector('#editor');
   const preview = document.querySelector('#preview');
   
   // Update preview as user types (debounced)
-  editor.addEventListener('input', debounce(async () => {
-    await renderToElement(engine, 'letter', editor.value, preview, { format: 'svg' });
+  editor.addEventListener('input', utils.debounce(async () => {
+    await exporters.toElement(engine, 'letter', editor.value, preview, { format: 'svg' });
   }, 300));
 }
 ```
@@ -117,7 +117,7 @@ quillmark-web/
 ├── public/
 │   ├── quills/              # Quill zip files
 │   │   └── usaf_memo.zip    # USAF memo template
-│   └── usaf_memo/           # Legacy: unzipped template files
+│   └── usaf_memo/           # Unzipped template files
 ├── designs/                 # Design documents
 │   ├── WEB_LIB_DESIGN.md   # Library architecture
 │   └── WASM_DESIGN.md      # WASM API design
@@ -132,13 +132,13 @@ The playground demonstrates the complete Quillmark workflow:
 
 1. **Load Quill Template**: Uses `fromZip()` to load the USAF memo template from `/public/quills/usaf_memo.zip`
 
-2. **Initialize Engine**: Creates a Quillmark WASM engine instance with `Quillmark.create()`
+2. **Initialize Engine**: Creates a Quillmark WASM engine instance with `new Quillmark()`
 
 3. **Register Template**: Registers the Quill with `engine.registerQuill(name, quillJson)`
 
 4. **Render Content**: 
-   - Real-time SVG preview using `renderToElement()`
-   - PDF download using `renderToBlob()` + `downloadArtifact()`
+   - Real-time SVG preview using `exporters.toElement()`
+   - PDF download using `exporters.toBlob()` + `exporters.download()`
 
 ## Quill JSON Contract
 

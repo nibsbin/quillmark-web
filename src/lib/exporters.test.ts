@@ -25,7 +25,7 @@ describe('exportToBlob', () => {
 
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.type).toBe('application/pdf');
-    expect(engine.render).toHaveBeenCalledWith('test-quill', '# Hello', { format: 'pdf' });
+    expect(engine.render).toHaveBeenCalledWith('Hello world', { format: 'pdf', quillName: 'test-quill' });
   });
 
   it('should export SVG to blob', async () => {
@@ -45,7 +45,7 @@ describe('exportToBlob', () => {
     const blob = await exportToBlob(engine, 'test-quill', '# Hello');
 
     expect(blob.type).toBe('application/pdf');
-    expect(engine.render).toHaveBeenCalledWith('test-quill', '# Hello', { format: 'pdf' });
+    expect(engine.render).toHaveBeenCalledWith('# Hello', { format: 'pdf', quillName: 'test-quill' });
   });
 
   it('should handle array artifacts', async () => {

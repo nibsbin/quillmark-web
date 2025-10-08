@@ -65,7 +65,7 @@ export async function exportToBlob(
   const format = options?.format || 'pdf';
   
   // Render using the Quillmark engine API
-  const result = engine.render(quillName, markdown, { format, ...options });
+  const result = engine.render(markdown, { format, ...options, quillName });
   
   // Extract artifact
   let artifactCandidate: any = result.artifacts;
@@ -140,7 +140,7 @@ export async function exportToElement(
   const format = options?.format || 'svg';
   
   // Render using the Quillmark engine API
-  const result = engine.render(quillName, markdown, { format, ...options });
+  const result = engine.render(markdown, { format, ...options, quillName });
   
   // Extract artifact
   let artifactCandidate: any = result.artifacts;
