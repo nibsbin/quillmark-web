@@ -42,4 +42,5 @@ export interface QuillMetadata {
 export interface RenderOptions {
   format?: 'pdf' | 'svg' | 'txt';
   assets?: Record<string, Uint8Array>;
+  quillName?: string;  // Optional: overrides or fills in for the markdown's QUILL frontmatter field
 }
