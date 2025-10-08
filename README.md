@@ -117,7 +117,7 @@ quillmark-web/
 ├── public/
 │   ├── quills/              # Quill zip files
 │   │   └── usaf_memo.zip    # USAF memo template
-│   └── usaf_memo/           # Legacy: unzipped template files
+│   └── usaf_memo/           # Unzipped template files
 ├── designs/                 # Design documents
 │   ├── WEB_LIB_DESIGN.md   # Library architecture
 │   └── WASM_DESIGN.md      # WASM API design

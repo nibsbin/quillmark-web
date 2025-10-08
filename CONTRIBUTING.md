@@ -86,7 +86,7 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Quill
 
 When modifying the library:
 
-1. **Maintain backward compatibility** - avoid breaking changes to the public API
+1. **Follow the established API patterns** - maintain consistency with existing code
 2. **Update TypeScript types** in `src/lib/types.ts` if needed
 3. **Update documentation** in `src/lib/README.md`
 4. **Test your changes** in the playground demo
