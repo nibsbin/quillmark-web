@@ -25,7 +25,7 @@ describe('exportToBlob', () => {
 
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.type).toBe('application/pdf');
-    expect(engine.render).toHaveBeenCalledWith('Hello world', { format: 'pdf', quillName: 'test-quill' });
+    expect(engine.render).toHaveBeenCalledWith('# Hello', { format: 'pdf', quillName: 'test-quill' });
   });
 
   it('should export SVG to blob', async () => {
