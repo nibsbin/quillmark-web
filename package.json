@@ -29,6 +29,7 @@
     "build:lib": "vite build --config vite.config.lib.ts && rm -rf dist/lib/quills dist/lib/usaf_memo",
     "build:playground": "vite build",
     "build": "npm run build:lib && npm run build:playground",
+    "package:quills": "node scripts/package-quills.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -11,7 +11,7 @@ This repository contains:
 ### Playground Demo
 - 🖋️ Interactive markdown editor with live preview
 - 📄 Real-time rendering to PDF and SVG formats
-- 🎯 Pre-loaded USAF memo template for testing
+- 🎯 Pre-loaded templates (USAF Memo, Taro) from tonguetoquill-collection
 - 🚀 Fast development with Vite and TypeScript
 
 ### Library (`src/lib/`)
@@ -115,9 +115,14 @@ quillmark-web/
 │       ├── types.ts         # TypeScript definitions
 │       └── README.md        # Library documentation
 ├── public/
-│   ├── quills/              # Quill zip files
-│   │   └── usaf_memo.zip    # USAF memo template
-│   └── usaf_memo/           # Unzipped template files
+│   ├── quills/              # Quill zip files (generated from tonguetoquill-collection)
+│   │   ├── usaf_memo.zip    # USAF memo template
+│   │   └── taro.zip         # Taro template
+│   └── tonguetoquill-collection/  # Git subtree of quill templates
+│       └── quills/          # Source quill templates
+├── scripts/                 # Utility scripts
+│   ├── package-quills.js   # Packages quills into zip files
+│   └── README.md           # Scripts documentation
 ├── designs/                 # Design documents
 │   ├── WEB_LIB_DESIGN.md   # Library architecture
 │   └── WASM_DESIGN.md      # WASM API design
@@ -187,6 +192,32 @@ npm run preview
 ```
 
 The built files will be in the `dist/` directory and can be deployed to any static hosting service.
+
+## Updating Quill Templates
+
+The playground uses quill templates from the [tonguetoquill-collection](https://github.com/nibsbin/tonguetoquill-collection) repository, which is included as a git subtree at `public/tonguetoquill-collection/`.
+
+### Updating Templates from Upstream
+
+To pull the latest templates from the tonguetoquill-collection repository:
+
+```bash
+# Pull latest changes from tonguetoquill-collection
+git subtree pull --prefix public/tonguetoquill-collection https://github.com/nibsbin/tonguetoquill-collection.git main --squash
+
+# Regenerate zip files
+npm run package:quills
+```
+
+### Modifying Templates Locally
+
+If you need to modify templates locally:
+
+1. Edit files in `public/tonguetoquill-collection/quills/`
+2. Regenerate zip files: `npm run package:quills`
+3. Test in the playground: `npm run dev`
+
+Note: Local changes to the subtree should ideally be contributed back to the upstream repository.
 
 ## Screenshots
 
