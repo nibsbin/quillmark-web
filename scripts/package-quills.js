@@ -18,7 +18,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const QUILLS_SOURCE_DIR = join(__dirname, '../public/tonguetoquill-collection/quills');
+const QUILLS_SOURCE_DIR = join(__dirname, '../tonguetoquill-collection/quills');
 const QUILLS_OUTPUT_DIR = join(__dirname, '../public/quills');
 
 /**
