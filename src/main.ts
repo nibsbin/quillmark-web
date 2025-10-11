@@ -1,5 +1,5 @@
-import { 
-  Quillmark, 
+import {
+  Quillmark,
   loaders,
   exporters,
   utils
@@ -42,7 +42,8 @@ async function init() {
     const options = Array.from(quillSelect.options).map(o => o.value).filter(Boolean);
     if (options.length === 0) return;
 
-  showLoading('Preloading templates...');
+    console.log('Preloading quills:', options);
+    showLoading('Preloading templates...');
 
     await Promise.all(options.map(async (filename) => {
       try {
@@ -64,6 +65,9 @@ async function init() {
         // don't rethrow - continue preloading others
       }
     }));
+
+    let quills = engine.listQuills();
+    console.log('Registered quills:', quills);
 
     showStatus('Templates preloaded', 'success');
   }
