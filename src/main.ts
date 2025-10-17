@@ -89,17 +89,17 @@ async function init() {
     if (downloadPdfBtn) downloadPdfBtn.disabled = false;
   }
 
-  // Auto-render SVG when the markdown changes using exporters.toElement
-  const renderSvg = async () => {
+  // Auto-render preview when the markdown changes using exporters.preview
+  const renderPreview = async () => {
     try {
-      await exporters.toElement(engine, markdownInput.value, preview, { format: 'svg' });
+      await exporters.preview(engine, markdownInput.value, preview);
     } catch (err) {
-      console.error('SVG render error:', err);
-      showStatus('SVG render failed', 'error');
+      console.error('Preview render error:', err);
+      showStatus(`Preview render failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
   };
 
-  const debouncedRender = utils.debounce(renderSvg, 50);
+  const debouncedRender = utils.debounce(renderPreview, 50);
   markdownInput.addEventListener('input', debouncedRender);
 
   // Re-render when the selected quill changes: swap editor content only
@@ -116,22 +116,21 @@ async function init() {
     markdownInput.value = mdKey && quillJson.files[mdKey]
       ? quillJson.files[mdKey].contents
       : '# Welcome\n\nEdit this markdown to see the preview update.';
-    await renderSvg();
+    await renderPreview();
   });
 
-  // Initial SVG render on page load
-  renderSvg().catch(err => console.error('Initial SVG render failed:', err));
+  // Initial preview render on page load
+  renderPreview().catch(err => console.error('Initial preview render failed:', err));
 
-  // Download PDF on demand using exporters.toBlob and exporters.download
+  // Download PDF on demand using exporters.downloadDocument
   downloadPdfBtn?.addEventListener('click', async () => {
-    showLoading('Rendering PDF...');
+    showLoading('Rendering document...');
     try {
-      const blob = await exporters.toBlob(engine, markdownInput.value, { format: 'pdf' });
-      exporters.download(blob, 'render-output.pdf');
+      await exporters.downloadDocument(engine, markdownInput.value, { filename: 'document.pdf' });
       showStatus('Download started — check your browser downloads', 'success');
     } catch (err) {
-      console.error('PDF render/download error:', err);
-      showStatus('PDF generation failed', 'error');
+      console.error('Document render/download error:', err);
+      showStatus(`Download failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
   });
 }

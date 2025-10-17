@@ -6,7 +6,14 @@
  * to the underlying WASM API.
  */
 
-import { exportToBlob, exportToDataUrl, exportToElement, download as downloadBlob } from './exporters';
+import { 
+  exportToBlob, 
+  exportToDataUrl, 
+  exportToElement, 
+  download as downloadBlob,
+  preview as previewMarkdown,
+  downloadDocument as downloadMarkdownDocument
+} from './exporters';
 import { fromZip as _fromZip } from './loaders';
 import { detectBinaryFile, debounce } from './utils';
 
@@ -19,7 +26,13 @@ export type {
   FileTree, 
   FileNode, 
   QuillMetadata,
-  RenderOptions
+  RenderOptions,
+  ParsedDocument,
+  QuillInfo,
+  Artifact,
+  RenderResult,
+  PreviewOptions,
+  DownloadOptions
 } from './types';
 
 // Grouped exports - the only way to access utilities
@@ -31,7 +44,9 @@ export const exporters = {
   toBlob: exportToBlob,
   toDataUrl: exportToDataUrl,
   toElement: exportToElement,
-  download: downloadBlob
+  download: downloadBlob,
+  preview: previewMarkdown,
+  downloadDocument: downloadMarkdownDocument
 };
 
 export const utils = {
