@@ -11,6 +11,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,ts}'],
+    deps: {
+      inline: ['@quillmark-test/wasm']
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
