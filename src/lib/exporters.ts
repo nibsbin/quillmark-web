@@ -11,26 +11,7 @@ import type {
   QuillInfo,
   ParsedDocument
 } from './types';
-
-/**
- * Normalize parsed document from WASM
- * 
- * The WASM layer returns fields as a Map, but it needs to be a plain object
- * for proper JSON serialization when passing to render().
- * 
- * @internal
- */
-function normalizeParsedDocument(parsed: any): ParsedDocument {
-  // Convert Map to plain object if needed
-  const fields = parsed.fields instanceof Map 
-    ? Object.fromEntries(parsed.fields)
-    : parsed.fields;
-  
-  return {
-    fields,
-    quillTag: parsed.quillTag
-  };
-}
+import { normalizeParsedDocument } from './normalize';
 
 /**
  * Convert various artifact byte formats to Uint8Array
