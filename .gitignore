@@ -145,3 +145,5 @@ dist/
 .DS_Store
 
 public/quills/*
+
+tests/output/*
