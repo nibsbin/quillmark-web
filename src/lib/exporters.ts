@@ -292,9 +292,15 @@ export async function exportToDataUrl(
   }
   
   // Node.js environment fallback using Buffer
-  const arrayBuffer = await blob.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  const base64 = buffer.toString('base64');
-  return `data:${blob.type};base64,${base64}`;
+  // Check if Buffer is available (Node.js environment)
+  if (typeof Buffer !== 'undefined') {
+    const arrayBuffer = await blob.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64 = buffer.toString('base64');
+    return `data:${blob.type};base64,${base64}`;
+  }
+  
+  // Fallback for environments without FileReader or Buffer
+  throw new Error('exportToDataUrl requires either FileReader (browser) or Buffer (Node.js) to be available');
 }
 
