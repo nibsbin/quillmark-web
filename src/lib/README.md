@@ -172,6 +172,31 @@ zip -r my-quill.zip . -x '*.git*' -x '.quillignore'
 
 The zip file must contain `Quill.toml` at the root level.
 
+## Testing
+
+This library follows the validated testing patterns from `quillmark-wasm` end-to-end tests. See [TESTING_DIFFERENCES.md](/docs/TESTING_DIFFERENCES.md) for a detailed comparison of testing approaches.
+
+### Test Structure
+
+- **Unit Tests**: Test utility functions with mocks (loaders, exporters, utils)
+- **Workflow Documentation**: Document expected end-to-end patterns from quillmark-wasm
+- **Type Validation**: Ensure WASM returns plain objects (not Maps)
+
+### Running Tests
+
+```bash
+npm test
+```
+
+The test suite validates:
+- ✅ Zip file loading and validation
+- ✅ Binary file detection
+- ✅ Export functions (with mocked engines)
+- ✅ Utility functions (debounce, etc.)
+- 📋 Documented workflow patterns from quillmark-wasm
+
+Note: Integration tests with actual WASM are documented but skipped in jsdom environment. They can be run in browser test environments or with proper WASM configuration.
+
 ## License
 
 ISC
