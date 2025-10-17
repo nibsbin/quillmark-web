@@ -14,10 +14,6 @@ vi.mock('@quillmark-test/wasm', () => ({
 
 import { exportToBlob, exportToDataUrl } from './exporters';
 
-// Mock URL.createObjectURL and URL.revokeObjectURL for jsdom
-global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
-global.URL.revokeObjectURL = vi.fn();
-
 const TEST_MARKDOWN = `---
 title: Test Document
 QUILL: test_quill
