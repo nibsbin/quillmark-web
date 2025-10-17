@@ -146,4 +146,4 @@ dist/
 
 public/quills/*
 
-tests/output/*
+src/tests/output/
