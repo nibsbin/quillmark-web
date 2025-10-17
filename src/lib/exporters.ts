@@ -280,11 +280,27 @@ export async function exportToDataUrl(
   options?: RenderOptions
 ): Promise<string> {
   const blob = await exportToBlob(engine, markdown, options);
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+  
+  // Check if we're in a browser environment with FileReader
+  if (typeof FileReader !== 'undefined') {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+  
+  // Node.js environment fallback using Buffer
+  // Check if Buffer is available (Node.js environment)
+  if (typeof Buffer !== 'undefined') {
+    const arrayBuffer = await blob.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64 = buffer.toString('base64');
+    return `data:${blob.type};base64,${base64}`;
+  }
+  
+  // Fallback for environments without FileReader or Buffer
+  throw new Error('exportToDataUrl requires either FileReader (browser) or Buffer (Node.js) to be available');
 }
 

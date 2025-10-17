@@ -44,9 +44,9 @@ export function insertPath(root: any, parts: string[], value: any): void {
  * @internal
  */
 export function debounce<T extends (...args: any[]) => void>(fn: T, wait = 250): (...args: Parameters<T>) => void {
-  let t: number | undefined;
+  let t: ReturnType<typeof setTimeout> | undefined;
   return (...args: Parameters<T>) => {
-    if (t) window.clearTimeout(t);
-    t = window.setTimeout(() => fn(...args), wait);
+    if (t) clearTimeout(t);
+    t = setTimeout(() => fn(...args), wait);
   };
 }
