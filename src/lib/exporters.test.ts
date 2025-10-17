@@ -5,12 +5,6 @@ import { exportToBlob, exportToDataUrl, exportToElement, download } from './expo
 global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
 global.URL.revokeObjectURL = vi.fn();
 
-const markdownSample = 
-`---
-QUILL: test-quill
----
-# Hello`;
-
 // Mock Quillmark engine
 const createMockEngine = (artifactBytes: Uint8Array) => {
   return {

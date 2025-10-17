@@ -5,6 +5,16 @@ import {
   utils
 } from './lib';
 
+/**
+ * Determine the output format for a given quill name
+ * @param quillName - Name of the quill (e.g., "usaf_form_8")
+ * @returns 'pdf' or 'svg'
+ */
+export function getFormatForQuill(quillName: string): 'pdf' | 'svg' {
+  // Only usaf_form_8 should render to PDF, all others to SVG
+  return quillName === 'usaf_form_8' ? 'pdf' : 'svg';
+}
+
 // Init app
 async function init() {
   const markdownInput = document.getElementById('markdown-input') as HTMLTextAreaElement | null;
@@ -89,17 +99,21 @@ async function init() {
     if (downloadPdfBtn) downloadPdfBtn.disabled = false;
   }
 
-  // Auto-render SVG when the markdown changes using exporters.toElement
-  const renderSvg = async () => {
+  // Auto-render when the markdown changes using exporters.toElement
+  // Format is determined by the current quill selection
+  const render = async () => {
     try {
-      await exporters.toElement(engine, markdownInput.value, preview, { format: 'svg' });
+      const currentQuillFilename = quillSelect?.value || 'usaf_memo.zip';
+      const currentQuillName = currentQuillFilename.replace(/\.zip$/i, '');
+      const format = getFormatForQuill(currentQuillName);
+      await exporters.toElement(engine, markdownInput.value, preview, { format });
     } catch (err) {
-      console.error('SVG render error:', err);
-      showStatus('SVG render failed', 'error');
+      console.error('Render error:', err);
+      showStatus('Render failed', 'error');
     }
   };
 
-  const debouncedRender = utils.debounce(renderSvg, 50);
+  const debouncedRender = utils.debounce(render, 50);
   markdownInput.addEventListener('input', debouncedRender);
 
   // Re-render when the selected quill changes: swap editor content only
@@ -116,11 +130,11 @@ async function init() {
     markdownInput.value = mdKey && quillJson.files[mdKey]
       ? quillJson.files[mdKey].contents
       : '# Welcome\n\nEdit this markdown to see the preview update.';
-    await renderSvg();
+    await render();
   });
 
-  // Initial SVG render on page load
-  renderSvg().catch(err => console.error('Initial SVG render failed:', err));
+  // Initial render on page load
+  render().catch(err => console.error('Initial render failed:', err));
 
   // Download PDF on demand using exporters.toBlob and exporters.download
   downloadPdfBtn?.addEventListener('click', async () => {
