@@ -37,10 +37,61 @@ export interface QuillMetadata {
 }
 
 /**
+ * Parsed markdown document (returned by Quillmark.parseMarkdown)
+ */
+export interface ParsedDocument {
+  fields: Record<string, any>;
+  quillTag?: string;
+}
+
+/**
+ * Information about a registered Quill (returned by engine.getQuillInfo)
+ */
+export interface QuillInfo {
+  name: string;
+  backend: string;
+  metadata: Record<string, any>;
+  example?: string;
+  fieldSchemas: Record<string, any>;
+  supportedFormats: Array<'pdf' | 'svg' | 'txt'>;
+}
+
+/**
+ * Artifact from render result
+ */
+export interface Artifact {
+  bytes: Uint8Array;
+  mimeType?: string;
+}
+
+/**
+ * Result from rendering
+ */
+export interface RenderResult {
+  artifacts: Artifact[];
+}
+
+/**
  * Options for rendering
  */
 export interface RenderOptions {
   format?: 'pdf' | 'svg' | 'txt';
   assets?: Record<string, Uint8Array>;
-  quillName?: string;  // Optional: overrides or fills in for the markdown's QUILL frontmatter field
+  quillName?: string;  // Optional: overrides quillTag from ParsedDocument
+}
+
+/**
+ * Options for preview and download operations
+ */
+export interface PreviewOptions {
+  format?: 'pdf' | 'svg' | 'txt';
+  assets?: Record<string, Uint8Array>;
+  quillName?: string;
+}
+
+export interface DownloadOptions {
+  format?: 'pdf' | 'svg' | 'txt';
+  assets?: Record<string, Uint8Array>;
+  quillName?: string;
+  filename?: string;
 }
