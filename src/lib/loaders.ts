@@ -96,7 +96,7 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
         const parts = relativePath.split('/');
         
         if (detectBinaryFile(path)) {
-          // Binary file - store as number array
+          // Binary file - store as number array (WASM JSON deserialization requires plain arrays)
           const bytes = Array.from(fileData);
           insertPath(quillObj, parts, { contents: bytes });
         } else {

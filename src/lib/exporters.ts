@@ -13,6 +13,26 @@ import type {
 } from './types';
 
 /**
+ * Normalize parsed document from WASM
+ * 
+ * The WASM layer returns fields as a Map, but it needs to be a plain object
+ * for proper JSON serialization when passing to render().
+ * 
+ * @internal
+ */
+function normalizeParsedDocument(parsed: any): ParsedDocument {
+  // Convert Map to plain object if needed
+  const fields = parsed.fields instanceof Map 
+    ? Object.fromEntries(parsed.fields)
+    : parsed.fields;
+  
+  return {
+    fields,
+    quillTag: parsed.quillTag
+  };
+}
+
+/**
  * Convert various artifact byte formats to Uint8Array
  * @internal
  */
@@ -128,7 +148,7 @@ export async function preview(
   options?: PreviewOptions
 ): Promise<void> {
   // Parse markdown to get quill tag
-  const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);
+  const parsed: ParsedDocument = normalizeParsedDocument(Quillmark.parseMarkdown(markdown));
   const quillName = options?.quillName || parsed.quillTag;
   
   // Determine the best format for preview
@@ -183,7 +203,7 @@ export async function downloadDocument(
   const format = options?.format || 'pdf';
   
   // Parse markdown
-  const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);
+  const parsed: ParsedDocument = normalizeParsedDocument(Quillmark.parseMarkdown(markdown));
   
   // Render using the new WASM workflow
   const result: RenderResult = engine.render(parsed, { 
@@ -247,7 +267,7 @@ export async function exportToBlob(
   const format = options?.format || 'pdf';
   
   // Parse markdown using new WASM API
-  const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);
+  const parsed: ParsedDocument = normalizeParsedDocument(Quillmark.parseMarkdown(markdown));
   
   // Render using the new WASM workflow
   const result: RenderResult = engine.render(parsed, { format, ...options });
@@ -313,7 +333,7 @@ export async function exportToElement(
   const format = options?.format || 'svg';
   
   // Parse markdown using new WASM API
-  const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);
+  const parsed: ParsedDocument = normalizeParsedDocument(Quillmark.parseMarkdown(markdown));
   
   // Render using the new WASM workflow
   const result: RenderResult = engine.render(parsed, { format, ...options });

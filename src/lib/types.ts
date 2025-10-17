@@ -21,7 +21,7 @@ export interface FileTree {
  * Individual file entry
  */
 export interface FileNode {
-  contents: string | number[];  // text or binary
+  contents: string | number[];  // text or binary (binary as number array for JSON serialization)
 }
 
 /**

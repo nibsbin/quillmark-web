@@ -56,8 +56,8 @@ async function init() {
         const name = filename.replace(/\.zip$/i, '');
         try {
           engine!.registerQuill(name, quillJson as any);
-        } catch (_) {
-          // ignore duplicate registration errors
+        } catch (err) {
+          console.error(`Failed to register ${name}:`, err);
         }
         preloadedQuills[filename] = quillJson;
       } catch (err) {
