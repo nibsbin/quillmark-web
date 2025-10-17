@@ -95,7 +95,7 @@ async function init() {
       await exporters.preview(engine, markdownInput.value, preview);
     } catch (err) {
       console.error('Preview render error:', err);
-      showStatus('Preview render failed', 'error');
+      showStatus(`Preview render failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
   };
 
@@ -124,13 +124,13 @@ async function init() {
 
   // Download PDF on demand using exporters.downloadDocument
   downloadPdfBtn?.addEventListener('click', async () => {
-    showLoading('Rendering PDF...');
+    showLoading('Rendering document...');
     try {
-      await exporters.downloadDocument(engine, markdownInput.value, { filename: 'render-output.pdf' });
+      await exporters.downloadDocument(engine, markdownInput.value, { filename: 'document.pdf' });
       showStatus('Download started — check your browser downloads', 'success');
     } catch (err) {
-      console.error('PDF render/download error:', err);
-      showStatus('PDF generation failed', 'error');
+      console.error('Document render/download error:', err);
+      showStatus(`Download failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
   });
 }
