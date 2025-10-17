@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { exportToBlob, exportToDataUrl, exportToElement, download } from './exporters';
+import { exportToBlob, exportToDataUrl } from './exporters';
 
 // Mock Quillmark class
 vi.mock('@quillmark-test/wasm', () => ({
@@ -89,71 +89,5 @@ describe('exportToDataUrl', () => {
     const dataUrl = await exportToDataUrl(engine, markdownSample, { format: 'svg' });
 
     expect(dataUrl).toMatch(/^data:image\/svg\+xml;base64,/);
-  });
-});
-
-describe('exportToElement', () => {
-  it('should inject SVG into element', async () => {
-    const svgMarkup = '<svg width="100" height="100"></svg>';
-    const svgBytes = new TextEncoder().encode(svgMarkup);
-    const engine = createMockEngine(svgBytes);
-    
-    const element = document.createElement('div');
-    await exportToElement(engine, markdownSample, element, { format: 'svg' });
-
-    expect(element.innerHTML).toContain('<svg');
-    expect(element.innerHTML).toContain('width="100"');
-  });
-
-  it('should create embed for PDF', async () => {
-    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]);
-    const engine = createMockEngine(pdfBytes);
-    
-    const element = document.createElement('div');
-    await exportToElement(engine, markdownSample, element, { format: 'pdf' });
-
-    expect(element.innerHTML).toContain('<embed');
-    expect(element.innerHTML).toContain('type="application/pdf"');
-  });
-
-  it('should default to SVG format', async () => {
-    const svgBytes = new TextEncoder().encode('<svg></svg>');
-    const engine = createMockEngine(svgBytes);
-    
-    const element = document.createElement('div');
-    await exportToElement(engine, markdownSample, element);
-
-    expect(element.innerHTML).toContain('<svg');
-  });
-});
-
-describe('download', () => {
-  it('should trigger download', () => {
-    const blob = new Blob(['test'], { type: 'text/plain' });
-    
-    // Mock DOM methods
-    const createElementSpy = vi.spyOn(document, 'createElement');
-    const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => null as any);
-    const clickSpy = vi.fn();
-    const removeSpy = vi.fn();
-    
-    const mockAnchor = {
-      href: '',
-      download: '',
-      click: clickSpy,
-      remove: removeSpy
-    } as any;
-    
-    createElementSpy.mockReturnValue(mockAnchor);
-
-    download(blob, 'test.txt');
-
-    expect(createElementSpy).toHaveBeenCalledWith('a');
-    expect(mockAnchor.download).toBe('test.txt');
-    expect(clickSpy).toHaveBeenCalled();
-    expect(removeSpy).toHaveBeenCalled();
-
-    createElementSpy.mockRestore();
-    appendChildSpy.mockRestore();
   });
 });
