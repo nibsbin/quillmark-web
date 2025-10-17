@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 // Mock the WASM module before importing exporters
 vi.mock('@quillmark-test/wasm', () => ({
   Quillmark: class {
-    static parseMarkdown = vi.fn((markdown: string) => ({
+    static parseMarkdown = vi.fn((_markdown: string) => ({
       fields: {},
       quillTag: 'test-quill'
     }));
