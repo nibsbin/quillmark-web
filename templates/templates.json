@@ -8,10 +8,15 @@
         "name": "U.S. Space Force Memo",
         "description": "Official memorandum template for the U.S. Space Force.",
         "file": "ussf_template.md"
-    }
+    },
     {
         "name": "Taro Template",
         "description": "Official Taro ice cream template.",
         "file": "taro.md"
+    },
+    {
+        "name": "Fry's Aircrew Qualification Report",
+        "description": "Fry's Aircrew Qualification Report.",
+        "file": "af8_fry.md"
     }
 ]
