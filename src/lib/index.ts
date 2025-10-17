@@ -9,8 +9,6 @@
 import { 
   exportToBlob, 
   exportToDataUrl, 
-  exportToElement, 
-  download as downloadBlob,
   preview as previewMarkdown,
   downloadDocument as downloadMarkdownDocument
 } from './exporters';
@@ -43,8 +41,6 @@ export const loaders = {
 export const exporters = {
   toBlob: exportToBlob,
   toDataUrl: exportToDataUrl,
-  toElement: exportToElement,
-  download: downloadBlob,
   preview: previewMarkdown,
   downloadDocument: downloadMarkdownDocument
 };
