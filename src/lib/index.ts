@@ -11,7 +11,7 @@ import { fromZip as _fromZip } from './loaders';
 import { detectBinaryFile, debounce } from './utils';
 
 // Re-export WASM core classes
-export { Quillmark, Quill } from '@quillmark-test/wasm';
+export { Quillmark } from '@quillmark-test/wasm';
 
 // Export types
 export type { 
