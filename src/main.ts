@@ -89,17 +89,35 @@ async function init() {
     if (downloadPdfBtn) downloadPdfBtn.disabled = false;
   }
 
-  // Auto-render SVG when the markdown changes using exporters.toElement
-  const renderSvg = async () => {
+  // Auto-render preview (SVG preferred, fallback to PDF if SVG not supported)
+  const renderPreview = async () => {
     try {
       await exporters.toElement(engine, markdownInput.value, preview, { format: 'svg' });
+      showStatus('Preview updated', 'success');
     } catch (err) {
       console.error('SVG render error:', err);
-      showStatus('SVG render failed', 'error');
+      // Fall back to PDF preview if SVG is not supported (e.g., acroform backend)
+      try {
+        await exporters.toElement(engine, markdownInput.value, preview, { format: 'pdf' });
+        showStatus('Preview updated (PDF - SVG not supported by this template)', 'info');
+      } catch (pdfErr) {
+        console.error('PDF render error:', pdfErr);
+        // Show helpful error message in the preview
+        const errorMsg = (pdfErr as any)?.message || 'Unknown error';
+        preview.innerHTML = `
+          <div style="padding: 20px; text-align: center; color: #666;">
+            <h3 style="color: #dc3545; margin-bottom: 10px;">⚠️ Preview Not Available</h3>
+            <p style="margin-bottom: 10px;">This template does not support live preview.</p>
+            <p style="font-size: 14px; color: #888;">Error: ${errorMsg}</p>
+            <p style="margin-top: 15px; font-weight: 600;">You can still download the PDF using the button above.</p>
+          </div>
+        `;
+        showStatus('Preview not available - use PDF download', 'info');
+      }
     }
   };
 
-  const debouncedRender = utils.debounce(renderSvg, 50);
+  const debouncedRender = utils.debounce(renderPreview, 50);
   markdownInput.addEventListener('input', debouncedRender);
 
   // Re-render when the selected quill changes: swap editor content only
@@ -116,11 +134,11 @@ async function init() {
     markdownInput.value = mdKey && quillJson.files[mdKey]
       ? quillJson.files[mdKey].contents
       : '# Welcome\n\nEdit this markdown to see the preview update.';
-    await renderSvg();
+    await renderPreview();
   });
 
-  // Initial SVG render on page load
-  renderSvg().catch(err => console.error('Initial SVG render failed:', err));
+  // Initial preview render on page load
+  renderPreview().catch(err => console.error('Initial preview render failed:', err));
 
   // Download PDF on demand using exporters.toBlob and exporters.download
   downloadPdfBtn?.addEventListener('click', async () => {
