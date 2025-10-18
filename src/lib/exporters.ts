@@ -4,9 +4,7 @@
 
 import { Quillmark } from '@quillmark-test/wasm';
 import type { 
-  RenderOptions, 
-  PreviewOptions, 
-  DownloadOptions,
+  RenderOptions,
   RenderResult,
   QuillInfo,
   ParsedDocument
@@ -125,7 +123,7 @@ export async function preview(
   engine: Quillmark,
   markdown: string,
   element: HTMLElement,
-  options?: PreviewOptions
+  options?: RenderOptions
 ): Promise<void> {
   // Parse markdown to get quill tag
   const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);

@@ -79,19 +79,3 @@ export interface RenderOptions {
   assets?: Record<string, Uint8Array>;
   quillName?: string;  // Optional: overrides quillTag from ParsedDocument
 }
-
-/**
- * Options for preview and download operations
- */
-export interface PreviewOptions {
-  format?: 'pdf' | 'svg' | 'txt';
-  assets?: Record<string, Uint8Array>;
-  quillName?: string;
-}
-
-export interface DownloadOptions {
-  format?: 'pdf' | 'svg' | 'txt';
-  assets?: Record<string, Uint8Array>;
-  quillName?: string;
-  filename?: string;
-}

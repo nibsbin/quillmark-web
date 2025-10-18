@@ -29,8 +29,6 @@ export type {
   QuillInfo,
   Artifact,
   RenderResult,
-  PreviewOptions,
-  DownloadOptions
 } from './types';
 
 // Grouped exports - the only way to access utilities
