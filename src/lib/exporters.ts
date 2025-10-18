@@ -98,6 +98,26 @@ function getPreferredPreviewFormat(
   return 'svg';
 }
 
+export async function exportPreview(
+  engine: Quillmark,
+  markdown: string,
+  options?: RenderOptions
+): Promise<RenderResult> {
+  // Parse markdown to get quill tag
+  const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);
+  const quillName = options?.quillName || parsed.quillTag;
+  
+  // Determine the best format for preview
+  const format = getPreferredPreviewFormat(engine, quillName, options?.format);
+  
+  // Render using the new WASM workflow
+  const result: RenderResult = engine.render(parsed, { 
+    format, 
+    ...options 
+  });
+  return result
+}
+
 /**
  * Preview rendered markdown in a DOM element
  * 
@@ -125,19 +145,9 @@ export async function preview(
   element: HTMLElement,
   options?: RenderOptions
 ): Promise<void> {
-  // Parse markdown to get quill tag
-  const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);
-  const quillName = options?.quillName || parsed.quillTag;
-  
-  // Determine the best format for preview
-  const format = getPreferredPreviewFormat(engine, quillName, options?.format);
-  
-  // Render using the new WASM workflow
-  const result: RenderResult = engine.render(parsed, { 
-    format, 
-    ...options 
-  });
-  
+  const result = await exportPreview(engine, markdown, options);
+  const format = result.outputFormat;
+
   const bytes = extractArtifact(result);
   
   if (format === 'svg') {
@@ -176,7 +186,8 @@ export async function preview(
 export async function downloadDocument(
   engine: Quillmark,
   markdown: string,
-  options?: DownloadOptions
+  outputFilename: string,
+  options?: RenderOptions
 ): Promise<void> {
   const format = options?.format || 'pdf';
   
@@ -201,7 +212,7 @@ export async function downloadDocument(
     : format === 'svg' ? 'document.svg'
     : 'document.txt';
   
-  const filename = options?.filename || defaultFilename;
+  const filename = outputFilename || defaultFilename;
   
   // Create blob and trigger download
   const blob = new Blob([bytes.slice()], { type: mimeType });

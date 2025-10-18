@@ -69,6 +69,7 @@ export interface Artifact {
  */
 export interface RenderResult {
   artifacts: Artifact[];
+  outputFormat: 'pdf' | 'svg' | 'txt';
 }
 
 /**
