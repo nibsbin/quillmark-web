@@ -9,7 +9,8 @@
 import { 
   exportToBlob, 
   exportToDataUrl, 
-  preview as previewMarkdown,
+  preview as preview_,
+  exportPreview as exportPreview_,
   downloadDocument as downloadMarkdownDocument
 } from './exporters';
 import { fromZip as _fromZip } from './loaders';
@@ -39,7 +40,8 @@ export const loaders = {
 export const exporters = {
   toBlob: exportToBlob,
   toDataUrl: exportToDataUrl,
-  preview: previewMarkdown,
+  preview: preview_,
+  exportPreview: exportPreview_,
   downloadDocument: downloadMarkdownDocument
 };
 

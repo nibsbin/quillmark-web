@@ -103,6 +103,45 @@ export async function exportPreview(
   markdown: string,
   options?: RenderOptions
 ): Promise<RenderResult> {
+  /**
+   * Render markdown for a quick preview using the Quillmark WASM engine.
+   *
+   * This is a convenience helper that parses the provided markdown to determine
+   * the quill tag (unless `options.quillName` is provided), selects a sensible
+   * preview format (SVG preferred when supported, otherwise PDF or TXT), and
+   * invokes the engine's rendering API. It returns the raw render result from
+   * the engine so callers can inspect artifacts, output format, logs, etc.
+   *
+   * Inputs
+   * - engine: initialized `Quillmark` WASM engine instance.
+   * - markdown: the markdown string to parse and render. The markdown may
+   *   include a Quill tag (e.g. `::quill-name::`) which will be used to
+   *   determine the target quill if `options.quillName` is not supplied.
+   * - options: optional `RenderOptions` forwarded to the engine. If
+   *   `options.format` is omitted, this helper will pick a preferred preview
+   *   format via `getPreferredPreviewFormat`.
+   *
+   * Outputs
+   * - Resolves to a `RenderResult` produced by `engine.render(...)`.
+   *   The result typically contains `outputFormat` and `artifacts` which can
+   *   be used by higher-level helpers like `preview()` or `exportToBlob()`.
+   *
+   * Behavior and error modes
+   * - If the markdown cannot be parsed, the underlying `Quillmark.parseMarkdown`
+   *   may throw; that error will propagate to the caller.
+   * - If the provided `quillName` (explicit or parsed) cannot be resolved by
+   *   the engine, `engine.render` may throw. Callers should handle or surface
+   *   these errors as appropriate for their UI (e.g. show an error message).
+   *
+   * Examples
+   * ```ts
+   * const result = await exportPreview(engine, '# My Doc');
+   * // Prefer SVG preview when available
+   * if (result.outputFormat === 'svg') {
+   *   const svg = new TextDecoder().decode(result.artifacts[0]);
+   * }
+   * ```
+   */
   // Parse markdown to get quill tag
   const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);
   const quillName = options?.quillName || parsed.quillTag;
