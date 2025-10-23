@@ -55,7 +55,7 @@ async function init() {
         const quillJson = await loaders.fromZip(zipBlob);
         const name = filename.replace(/\.zip$/i, '');
         try {
-          engine!.registerQuill(name, quillJson as any);
+          engine!.registerQuill(quillJson as any);
         } catch (_) {
           // ignore duplicate registration errors
         }

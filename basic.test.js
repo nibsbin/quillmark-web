@@ -62,7 +62,7 @@ describe('quillmark-wasm smoke tests', () => {
     const engine = new Quillmark()
     
     expect(() => {
-      engine.registerQuill('test_quill', TEST_QUILL)
+      engine.registerQuill(TEST_QUILL)
     }).not.toThrow()
     
     const quills = engine.listQuills()
@@ -71,7 +71,7 @@ describe('quillmark-wasm smoke tests', () => {
 
   it('should get quill info after registration', () => {
     const engine = new Quillmark()
-    engine.registerQuill('test_quill', TEST_QUILL)
+    engine.registerQuill(TEST_QUILL)
     
     const info = engine.getQuillInfo('test_quill')
     
@@ -89,7 +89,7 @@ describe('quillmark-wasm smoke tests', () => {
 
   it('should render glue template', () => {
     const engine = new Quillmark()
-    engine.registerQuill('test_quill', TEST_QUILL)
+    engine.registerQuill( TEST_QUILL)
     
     const glue = engine.renderGlue('test_quill', TEST_MARKDOWN)
     
@@ -105,7 +105,7 @@ describe('quillmark-wasm smoke tests', () => {
     
     // Step 2: Create engine and register quill
     const engine = new Quillmark()
-    engine.registerQuill('test_quill', TEST_QUILL)
+    engine.registerQuill( TEST_QUILL)
     
     // Step 3: Get quill info
     const info = engine.getQuillInfo('test_quill')
@@ -157,7 +157,7 @@ this is not valid yaml
   it('should render to SVG format', () => {
     const parsed = Quillmark.parseMarkdown(TEST_MARKDOWN)
     const engine = new Quillmark()
-    engine.registerQuill('test_quill', TEST_QUILL)
+    engine.registerQuill( TEST_QUILL)
     
     const result = engine.render(parsed, { format: 'svg' })
     
@@ -169,7 +169,7 @@ this is not valid yaml
 
   it('should unregister quill', () => {
     const engine = new Quillmark()
-    engine.registerQuill('test_quill', TEST_QUILL)
+    engine.registerQuill( TEST_QUILL)
     
     expect(engine.listQuills()).toContain('test_quill')
     
@@ -181,7 +181,7 @@ this is not valid yaml
   it('should accept assets as plain JavaScript objects', () => {
     const parsed = Quillmark.parseMarkdown(TEST_MARKDOWN)
     const engine = new Quillmark()
-    engine.registerQuill('test_quill', TEST_QUILL)
+    engine.registerQuill( TEST_QUILL)
     
     // Assets should be passed as plain JavaScript objects with byte arrays
     const assets = {
@@ -209,7 +209,7 @@ this is not valid yaml
     
     // Step 2: Register and get quill info - metadata and fieldSchemas should be plain objects
     const engine = new Quillmark()
-    engine.registerQuill('test_quill', TEST_QUILL)
+    engine.registerQuill( TEST_QUILL)
     const info = engine.getQuillInfo('test_quill')
     
     expect(info.metadata instanceof Map).toBe(false)

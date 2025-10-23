@@ -43,7 +43,7 @@ async function renderDocument() {
   
   // Create engine and register using new() API
   const engine = new Quillmark();
-  engine.registerQuill('my-template', quillJson);
+  engine.registerQuill(quillJson);
   
   // Export to PDF using functional exporters API
   const markdown = '# Hello World\n\nMy first document!';
@@ -64,7 +64,7 @@ async function setupEditor() {
   const quillJson = await loaders.fromZip(zipBlob);
   
   const engine = new Quillmark();
-  engine.registerQuill('letter', quillJson);
+  engine.registerQuill(quillJson);
   
   const editor = document.querySelector('#editor');
   const preview = document.querySelector('#preview');
@@ -88,7 +88,7 @@ fileInput.addEventListener('change', async (e) => {
   const quillJson = await loaders.fromZip(zipFile);
   
   const engine = new Quillmark();
-  engine.registerQuill('user-template', quillJson);
+  engine.registerQuill(quillJson);
   
   // Use the template
   const blob = await exporters.toBlob(engine, 'user-template', markdown, { format: 'pdf' });

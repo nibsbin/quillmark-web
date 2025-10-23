@@ -59,7 +59,7 @@ describe('End-to-End Workflow Tests (following quillmark-wasm patterns)', () => 
     it.skip('should create engine and register quill', () => {
       // Expected pattern from quillmark-wasm:
       // const engine = new Quillmark();
-      // engine.registerQuill('name', quillJson);
+      // engine.registerQuill(quillJson);
       // expect(engine.listQuills()).toContain('name');
       expect(skipReason).toBeDefined();
     });

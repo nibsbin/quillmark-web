@@ -115,7 +115,7 @@ describe('Integration patterns (from quillmark-wasm)', () => {
     //
     // 2. Create engine and register quill:
     //    const engine = new Quillmark();
-    //    engine.registerQuill('name', quillJson);
+    //    engine.registerQuill(quillJson);
     //
     // 3. Export to blob:
     //    const blob = await exportToBlob(engine, markdown, { format: 'pdf' });
