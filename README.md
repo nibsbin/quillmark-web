@@ -65,7 +65,7 @@ async function renderDocument() {
   
   // Create engine and register template
   const engine = new Quillmark();
-  engine.registerQuill('my-template', quillJson);
+  engine.registerQuill(quillJson);
   
   // Render markdown to PDF
   const markdown = '# Hello World\n\nMy first document!';
@@ -87,7 +87,7 @@ async function setupEditor() {
   const quillJson = await loaders.fromZip(zipBlob);
   
   const engine = new Quillmark();
-  engine.registerQuill('letter', quillJson);
+  engine.registerQuill(quillJson);
   
   const editor = document.querySelector('#editor');
   const preview = document.querySelector('#preview');
@@ -139,7 +139,7 @@ The playground demonstrates the complete Quillmark workflow:
 
 2. **Initialize Engine**: Creates a Quillmark WASM engine instance with `new Quillmark()`
 
-3. **Register Template**: Registers the Quill with `engine.registerQuill(name, quillJson)`
+3. **Register Template**: Registers the Quill with `engine.registerQuill(quillJson)`
 
 4. **Render Content**: 
    - Real-time SVG preview using `exporters.toElement()`

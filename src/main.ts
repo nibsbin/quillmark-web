@@ -53,7 +53,6 @@ async function init() {
         if (!response.ok) throw new Error(`Failed to fetch ${filename}: ${response.statusText}`);
         const zipBlob = await response.blob();
         const quillJson = await loaders.fromZip(zipBlob);
-        const name = filename.replace(/\.zip$/i, '');
         try {
           engine!.registerQuill(quillJson as any);
         } catch (_) {
