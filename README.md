@@ -3,24 +3,19 @@
 A web-based playground and utility library for rendering Quillmark templates using `@quillmark-test/wasm`.
 
 This repository contains:
-- 🎮 **Interactive Playground** - A demo application for testing Quillmark templates
-- 📦 **@quillmark-test/web Library** - Opinionated frontend utilities for integrating Quillmark into your projects
+- **Interactive Playground** - Demo application for testing Quillmark templates
+- **@quillmark-test/web Library** - Frontend utilities for integrating Quillmark into your projects
 
 ## Features
 
-### Playground Demo
-- 🖋️ Interactive markdown editor with live preview
-- 📄 Real-time rendering to PDF and SVG formats
-- 🎯 Pre-loaded templates (USAF Memo, Taro) from tonguetoquill-collection
-- 🚀 Fast development with Vite and TypeScript
-
-### Library (`src/lib/`)
-- ✅ Opinionated Quill loading from `.zip` files
-- ✅ Easy rendering: `exporters.toBlob()`, `exporters.toDataUrl()`, `exporters.preview()`
-- ✅ Document downloads: `exporters.downloadDocument()`
-- ✅ Full WASM access - re-exports all low-level APIs
-- ✅ Type-safe with complete TypeScript definitions
-- ✅ Framework agnostic - works with vanilla JS, React, Vue, Svelte, etc.
+- Interactive markdown editor with live preview
+- Real-time rendering to PDF and SVG formats
+- Pre-loaded templates from tonguetoquill-collection
+- Opinionated Quill loading from `.zip` files
+- Export utilities: `toBlob()`, `toDataUrl()`, `toElement()`, `download()`
+- Full WASM API re-exports
+- Type-safe with complete TypeScript definitions
+- Framework agnostic
 
 ## Prerequisites
 
@@ -29,50 +24,32 @@ This repository contains:
 
 ## Quick Start
 
-### Running the Playground Demo
+### Running the Playground
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+npm run dev
+```
 
-2. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
+Navigate to http://localhost:5173 to use the interactive editor with live preview.
 
-3. **Open your browser:**
-   Navigate to http://localhost:5173
+### Using the Library
 
-4. **Try it out:**
-   - Edit the markdown in the left panel
-   - See real-time SVG preview on the right
-   - Click "Download PDF" to get a PDF version
-
-### Using the Library in Your Project
-
-The `@quillmark-test/web` library (in `src/lib/`) provides convenient utilities for working with Quillmark in browser applications.
-
-#### Basic Example: Render to PDF
+#### Render to PDF
 
 ```typescript
 import { Quillmark, loaders, exporters } from '@quillmark-test/web';
 
 async function renderDocument() {
-  // Load Quill template from zip file
   const response = await fetch('/quills/my-template.zip');
   const zipBlob = await response.blob();
   const quillJson = await loaders.fromZip(zipBlob);
-  
-  // Create engine and register template
+
   const engine = new Quillmark();
   engine.registerQuill(quillJson);
-  
-  // Render markdown
+
   const markdown = '# Hello World\n\nMy first document!';
   const result = exporters.render(engine, markdown, { format: 'pdf' });
-  
-  // Download the PDF
   exporters.download(result, 'output.pdf');
 }
 ```
@@ -84,16 +61,14 @@ import { Quillmark, loaders, exporters, utils } from '@quillmark-test/web';
 
 async function setupEditor() {
   const response = await fetch('/quills/letter.zip');
-  const zipBlob = await response.blob();
-  const quillJson = await loaders.fromZip(zipBlob);
-  
+  const quillJson = await loaders.fromZip(await response.blob());
+
   const engine = new Quillmark();
   engine.registerQuill(quillJson);
-  
+
   const editor = document.querySelector('#editor');
   const preview = document.querySelector('#preview');
-  
-  // Update preview as user types (debounced)
+
   editor.addEventListener('input', utils.debounce(() => {
     const result = exporters.render(engine, editor.value);
     exporters.toElement(result, preview);
@@ -134,23 +109,9 @@ quillmark-web/
 └── package.json            # Dependencies and scripts
 ```
 
-## How It Works
+## Quill JSON Format
 
-The playground demonstrates the complete Quillmark workflow:
-
-1. **Load Quill Template**: Uses `fromZip()` to load templates from `/quills/*.zip` files (generated from `tonguetoquill-collection/`)
-
-2. **Initialize Engine**: Creates a Quillmark WASM engine instance with `new Quillmark()`
-
-3. **Register Template**: Registers the Quill with `engine.registerQuill(quillJson)`
-
-4. **Render Content**: 
-   - Real-time SVG preview using `exporters.preview()`
-   - PDF download using `exporters.downloadDocument()`
-
-## Quill JSON Contract
-
-Quill templates follow the Quillmark JSON contract format:
+Quill templates use a nested JSON structure representing the file tree:
 
 ```javascript
 {
@@ -158,100 +119,59 @@ Quill templates follow the Quillmark JSON contract format:
   'Quill.toml': { contents: '...' },
   'glue.typ': { contents: '...' },
   'assets': {
-    'font.otf': { contents: [137, 80, 78, 71, ...] }  // Binary files as number arrays
+    'font.otf': { contents: [137, 80, 78, 71, ...] }
   },
   'packages': {
-    'my-package': {
-      'lib.typ': { contents: '...' }
-    }
+    'my-package': { 'lib.typ': { contents: '...' } }
   }
 }
 ```
 
-Key points:
-- Root object contains file tree structure
-- Text files have `contents` as strings
-- Binary files have `contents` as number arrays
-- Nested directories are nested objects
-- Must contain `Quill.toml` at the root
+- Text files: `contents` as strings
+- Binary files: `contents` as number arrays
+- Must include `Quill.toml` at root
 
 ## Technologies
 
-- **[Vite](https://vitejs.dev/)** - Fast build tool and dev server
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
-- **[@quillmark-test/wasm](https://github.com/quillmark)** - WebAssembly bindings for Quillmark
-- **[fflate](https://github.com/101arrowz/fflate)** - Fast zip file extraction
-- **vite-plugin-wasm** - WASM support for Vite
-- **vite-plugin-top-level-await** - Top-level await support
+- [Vite](https://vitejs.dev/) - Build tool and dev server
+- [TypeScript](https://www.typescriptlang.org/)
+- [@quillmark-test/wasm](https://github.com/quillmark) - WebAssembly bindings for Quillmark
+- [fflate](https://github.com/101arrowz/fflate) - Zip file extraction
+- vite-plugin-wasm
+- vite-plugin-top-level-await
 
 ## Building for Production
 
 ```bash
-# Build the playground
 npm run build
-
-# Preview the production build locally
 npm run preview
 ```
 
-The built files will be in the `dist/` directory and can be deployed to any static hosting service.
+Output is in `dist/` and can be deployed to any static hosting service.
 
 ## Updating Quill Templates
 
-The playground uses quill templates from the [tonguetoquill-collection](https://github.com/nibsbin/tonguetoquill-collection) repository, which is included as a git subtree at `tonguetoquill-collection/`.
+Templates are included as a git subtree from [tonguetoquill-collection](https://github.com/nibsbin/tonguetoquill-collection).
 
-### Updating Templates from Upstream
-
-To pull the latest templates from the tonguetoquill-collection repository:
+### Pull Latest from Upstream
 
 ```bash
-# Pull latest changes from tonguetoquill-collection
 git subtree pull --prefix tonguetoquill-collection https://github.com/nibsbin/tonguetoquill-collection.git main --squash
-
-# Regenerate zip files
 npm run package:quills
 ```
 
-### Modifying Templates Locally
+### Local Modifications
 
-If you need to modify templates locally:
-
-1. Edit files in `tonguetoquill-collection/quills/`
-2. Regenerate zip files: `npm run package:quills`
-3. Test in the playground: `npm run dev`
-
-Note: Local changes to the subtree should ideally be contributed back to the upstream repository.
+```bash
+# Edit files in tonguetoquill-collection/quills/
+npm run package:quills
+npm run dev
+```
 
 ## API Documentation
 
-See [`src/lib/README.md`](src/lib/README.md) for complete API documentation.
+See [`src/lib/README.md`](src/lib/README.md) for complete library documentation.
 
-The library provides a clean, composable API:
-
-```typescript
-// Render markdown
-const result = exporters.render(engine, markdown, { format: 'pdf' });
-
-// Convert to different formats
-const blob = exporters.toBlob(result);
-const url = await exporters.toDataUrl(result);
-exporters.toElement(result, element);
-exporters.download(result, 'doc.pdf');
-
-// Benefit: Render once, export many times
-const pdfResult = exporters.render(engine, markdown, { format: 'pdf' });
-const svgResult = exporters.render(engine, markdown, { format: 'svg' });
-exporters.download(pdfResult, 'doc.pdf');
-exporters.download(svgResult, 'doc.svg');
-```
-
-## Screenshots
-
-### PDF Rendering
-![PDF Rendering](https://github.com/user-attachments/assets/50981065-18bc-4f36-b5ae-4522e3e04643)
-
-### SVG Rendering
-![SVG Rendering](https://github.com/user-attachments/assets/c7648623-0056-457d-b52e-ca12c89ed571)
 
 ## Contributing
 
