@@ -45,14 +45,25 @@ async function renderDocument() {
   const engine = new Quillmark();
   engine.registerQuill(quillJson);
   
-  // Export to PDF using functional exporters API
+  // Render and download PDF directly
   const markdown = '# Hello World\n\nMy first document!';
-  const blob = await exporters.toBlob(engine, markdown, { format: 'pdf' });
-  
-  // Create download link
-  const url = URL.createObjectURL(blob);
-  window.open(url);
+  await exporters.downloadDocument(engine, markdown, 'output.pdf', { format: 'pdf' });
 }
+```
+
+#### Working with Blobs
+
+If you need more control, you can use `toBlob()` or `toDataUrl()`:
+
+```typescript
+// Get blob for custom handling
+const blob = await exporters.toBlob(engine, markdown, { format: 'pdf' });
+const url = URL.createObjectURL(blob);
+window.open(url);
+
+// Or get data URL
+const dataUrl = await exporters.toDataUrl(engine, markdown, { format: 'svg' });
+imgElement.src = dataUrl;
 ```
 
 ### Real-time SVG Preview
