@@ -222,24 +222,14 @@ If you need to modify templates locally:
 
 Note: Local changes to the subtree should ideally be contributed back to the upstream repository.
 
-## API Migration Guide
+## API Documentation
 
-### Version 0.4.0 - New Cleaner API
+See [`src/lib/README.md`](src/lib/README.md) for complete API documentation.
 
-We've introduced a cleaner, more semantically consistent API. The old API is still supported for backward compatibility.
+The library provides a clean, composable API:
 
-#### Before (Old API)
 ```typescript
-// Multiple entry points with different patterns
-const blob = await exporters.exportToBlob(engine, markdown, { format: 'pdf' });
-const url = await exporters.exportToDataUrl(engine, markdown, { format: 'svg' });
-await exporters.preview(engine, markdown, element, { format: 'svg' });
-await exporters.downloadDocument(engine, markdown, 'doc.pdf', { format: 'pdf' });
-```
-
-#### After (New API - Recommended)
-```typescript
-// Single render function, then convert
+// Render markdown
 const result = exporters.render(engine, markdown, { format: 'pdf' });
 
 // Convert to different formats
@@ -254,18 +244,6 @@ const svgResult = exporters.render(engine, markdown, { format: 'svg' });
 exporters.download(pdfResult, 'doc.pdf');
 exporters.download(svgResult, 'doc.svg');
 ```
-
-#### Migration Checklist
-- Replace `exportToBlob(engine, markdown, options)` with `render(engine, markdown, options)` + `toBlob(result)`
-- Replace `exportToDataUrl(engine, markdown, options)` with `render(engine, markdown, options)` + `toDataUrl(result)`
-- Replace `preview(engine, markdown, element, options)` with `render(engine, markdown, options)` + `toElement(result, element)`
-- Replace `downloadDocument(engine, markdown, filename, options)` with `render(engine, markdown, options)` + `download(result, filename)`
-
-The new API provides:
-- ✅ Better composability (render once, export many times)
-- ✅ Consistent naming and parameter ordering
-- ✅ Clear separation of concerns
-- ✅ Easier to test and maintain
 
 ## Screenshots
 

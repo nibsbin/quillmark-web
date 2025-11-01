@@ -140,13 +140,10 @@ Load a Quill from a .zip file. This is the **only** supported loading method.
 
 #### `exporters`
 
-The new API provides a cleaner, more composable way to render and export documents:
+The exporters provide a clean, composable API for rendering and exporting documents:
 
 ```typescript
 import { exporters } from '@quillmark-test/web';
-
-// NEW API - Recommended
-// ======================
 
 // 1. Render markdown to get a result
 const result = exporters.render(engine, markdown, { format: 'pdf' });
@@ -156,24 +153,17 @@ const blob = exporters.toBlob(result);
 const dataUrl = await exporters.toDataUrl(result);
 exporters.toElement(result, previewElement);
 exporters.download(result, 'output.pdf');
-
-// OLD API - Still supported for backward compatibility
-// =====================================================
-
-// exporters.exportToBlob(engine, markdown, options?): Promise<Blob>
-const blob = await exporters.exportToBlob(engine, markdown, { format: 'pdf' });
-
-// exporters.exportToDataUrl(engine, markdown, options?): Promise<string>
-const dataUrl = await exporters.exportToDataUrl(engine, markdown, { format: 'svg' });
-
-// exporters.preview(engine, markdown, element, options?): Promise<void>
-await exporters.preview(engine, markdown, preview, { format: 'svg' });
-
-// exporters.downloadDocument(engine, markdown, filename, options?): Promise<void>
-await exporters.downloadDocument(engine, markdown, 'output.pdf', { format: 'pdf' });
 ```
 
-**Why use the new API?**
+**Key Functions:**
+
+- **`render(engine, markdown, options?): RenderResult`** - Core rendering function. Parses markdown and renders it using the engine.
+- **`toBlob(result): Blob`** - Convert a render result to a Blob.
+- **`toDataUrl(result): Promise<string>`** - Convert a render result to a data URL.
+- **`toElement(result, element)`** - Display a render result in a DOM element (intelligently handles SVG, PDF, and text).
+- **`download(result, filename)`** - Trigger a browser download with the appropriate MIME type.
+
+**Benefits:**
 - Single `render()` function is the clear entry point
 - Render once, export many times (more efficient)
 - Pure conversion functions are easier to test and compose

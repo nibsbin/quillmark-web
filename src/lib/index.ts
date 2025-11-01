@@ -7,18 +7,11 @@
  */
 
 import { 
-  // New API
   render as render_,
   toBlob as toBlob_,
   toDataUrl as toDataUrl_,
   toElement as toElement_,
-  download as download_,
-  // Old API (kept for backward compatibility)
-  exportToBlob, 
-  exportToDataUrl, 
-  preview as preview_,
-  exportPreview as exportPreview_,
-  downloadDocument as downloadMarkdownDocument
+  download as download_
 } from './exporters';
 import { fromZip as _fromZip } from './loaders';
 import { detectBinaryFile, debounce } from './utils';
@@ -45,18 +38,11 @@ export const loaders = {
 };
 
 export const exporters = {
-  // New API - recommended
   render: render_,
   toBlob: toBlob_,
   toDataUrl: toDataUrl_,
   toElement: toElement_,
-  download: download_,
-  // Old API - kept for backward compatibility
-  exportToBlob,
-  exportToDataUrl,
-  preview: preview_,
-  exportPreview: exportPreview_,
-  downloadDocument: downloadMarkdownDocument
+  download: download_
 };
 
 export const utils = {
