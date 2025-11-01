@@ -33,7 +33,7 @@ This library takes an opinionated approach: **all Quills must be loaded from .zi
 ### Load and Render a Quill
 
 ```typescript
-import { Quillmark, loaders, exporters } from './lib';
+import { Quillmark, loaders, exporters } from '@quillmark-test/web';
 
 async function renderDocument() {
   // Load Quill from server using grouped loaders
@@ -45,17 +45,31 @@ async function renderDocument() {
   const engine = new Quillmark();
   engine.registerQuill(quillJson);
   
-  // Export to PDF using functional exporters API
+  // Render and download PDF directly
   const markdown = '# Hello World\n\nMy first document!';
-  const blob = await exporters.toBlob(engine, 'my-template', markdown, { format: 'pdf' });
-  exporters.download(blob, 'output.pdf');
+  await exporters.downloadDocument(engine, markdown, 'output.pdf', { format: 'pdf' });
 }
+```
+
+#### Working with Blobs
+
+If you need more control, you can use `toBlob()` or `toDataUrl()`:
+
+```typescript
+// Get blob for custom handling
+const blob = await exporters.toBlob(engine, markdown, { format: 'pdf' });
+const url = URL.createObjectURL(blob);
+window.open(url);
+
+// Or get data URL
+const dataUrl = await exporters.toDataUrl(engine, markdown, { format: 'svg' });
+imgElement.src = dataUrl;
 ```
 
 ### Real-time SVG Preview
 
 ```typescript
-import { Quillmark, loaders, exporters, utils } from './lib';
+import { Quillmark, loaders, exporters, utils } from '@quillmark-test/web';
 
 async function setupEditor() {
   // Load Quill from zip
@@ -71,7 +85,7 @@ async function setupEditor() {
   
   // Use grouped utils for debounce
   editor.addEventListener('input', utils.debounce(async () => {
-    await exporters.toElement(engine, 'letter', editor.value, preview, { format: 'svg' });
+    await exporters.preview(engine, editor.value, preview, { format: 'svg' });
   }, 300));
 }
 ```
@@ -79,7 +93,7 @@ async function setupEditor() {
 ### User Upload
 
 ```typescript
-import { Quillmark, loaders, exporters } from './lib';
+import { Quillmark, loaders, exporters } from '@quillmark-test/web';
 
 const fileInput = document.querySelector('input[type="file"]');
 fileInput.accept = '.zip';
@@ -90,9 +104,9 @@ fileInput.addEventListener('change', async (e) => {
   const engine = new Quillmark();
   engine.registerQuill(quillJson);
   
-  // Use the template
-  const blob = await exporters.toBlob(engine, 'user-template', markdown, { format: 'pdf' });
-  exporters.download(blob, 'output.pdf');
+  // Render and download
+  const markdown = '# My Document';
+  await exporters.downloadDocument(engine, markdown, 'output.pdf', { format: 'pdf' });
 });
 ```
 
@@ -103,7 +117,7 @@ fileInput.addEventListener('change', async (e) => {
 The `Quillmark` class is re-exported directly from `@quillmark-test/wasm`. Use `new Quillmark()` to create instances:
 
 ```typescript
-import { Quillmark } from './lib';
+import { Quillmark } from '@quillmark-test/web';
 
 const engine = new Quillmark();
 ```
@@ -115,7 +129,7 @@ All WASM methods are available: `registerQuill()`, `render()`, etc.
 #### `loaders`
 
 ```typescript
-import { loaders } from './lib';
+import { loaders } from '@quillmark-test/web';
 
 // loaders.fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson>
 const quillJson = await loaders.fromZip(zipBlob);
@@ -134,25 +148,28 @@ Load a Quill from a .zip file. This is the **only** supported loading method.
 Standalone functions for exporting rendered content:
 
 ```typescript
-import { exporters } from './lib';
+import { exporters } from '@quillmark-test/web';
 
-// exporters.toBlob(engine, quillName, markdown, options?): Promise<Blob>
-const blob = await exporters.toBlob(engine, 'my-quill', markdown, { format: 'pdf' });
+// exporters.toBlob(engine, markdown, options?): Promise<Blob>
+const blob = await exporters.toBlob(engine, markdown, { format: 'pdf' });
 
-// exporters.toDataUrl(engine, quillName, markdown, options?): Promise<string>
-const dataUrl = await exporters.toDataUrl(engine, 'my-quill', markdown, { format: 'svg' });
+// exporters.toDataUrl(engine, markdown, options?): Promise<string>
+const dataUrl = await exporters.toDataUrl(engine, markdown, { format: 'svg' });
 
-// exporters.toElement(engine, quillName, markdown, element, options?): Promise<void>
-await exporters.toElement(engine, 'my-quill', markdown, preview, { format: 'svg' });
+// exporters.preview(engine, markdown, element, options?): Promise<void>
+await exporters.preview(engine, markdown, previewElement, { format: 'svg' });
 
-// exporters.download(blob, filename): void
-exporters.download(blob, 'output.pdf');
+// exporters.exportPreview(engine, markdown, options?): Promise<RenderResult>
+const result = await exporters.exportPreview(engine, markdown);
+
+// exporters.downloadDocument(engine, markdown, filename, options?): Promise<void>
+await exporters.downloadDocument(engine, markdown, 'document.pdf', { format: 'pdf' });
 ```
 
 #### `utils`
 
 ```typescript
-import { utils } from './lib';
+import { utils } from '@quillmark-test/web';
 
 // utils.debounce(fn, wait): Function
 const debouncedHandler = utils.debounce(() => { /* ... */ }, 300);
