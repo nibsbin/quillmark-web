@@ -125,7 +125,7 @@ async function init() {
   downloadPdfBtn?.addEventListener('click', async () => {
     showLoading('Rendering document...');
     try {
-      await exporters.downloadDocument(engine, markdownInput.value, { filename: 'document.pdf' });
+      await exporters.downloadDocument(engine, markdownInput.value, 'document.pdf' );
       showStatus('Download started — check your browser downloads', 'success');
     } catch (err) {
       console.error('Document render/download error:', err);
