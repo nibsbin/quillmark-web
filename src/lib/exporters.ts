@@ -15,9 +15,8 @@ const BLOB_URL_REVOKE_DELAY = 1500;
 
 /*
  * Convert various artifact byte formats to ArrayBuffer-backed Uint8Array
- * @internal
  */
-function toArrayBuffer(bytesOrArtifact: any): ArrayBuffer {
+export function toArrayBuffer(bytesOrArtifact: any): ArrayBuffer {
   if (bytesOrArtifact == null) return new ArrayBuffer(0);
 
   // Unwrap { bytes: ... }
