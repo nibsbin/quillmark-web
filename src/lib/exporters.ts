@@ -13,22 +13,22 @@ import type {
 /** Time to wait before revoking blob URLs (in milliseconds) */
 const BLOB_URL_REVOKE_DELAY = 1500;
 
-/**
- * Convert various artifact byte formats to Uint8Array
+/*
+ * Convert various artifact byte formats to ArrayBuffer-backed Uint8Array
  * @internal
  */
-function toUint8Array(bytesOrArtifact: any): Uint8Array {
+function toArrayBuffer(bytesOrArtifact: any): Uint8Array {
   if (bytesOrArtifact == null) return new Uint8Array();
-  
+
   // Unwrap { bytes: ... }
   if (typeof bytesOrArtifact === 'object' && 'bytes' in bytesOrArtifact) {
-    return toUint8Array(bytesOrArtifact.bytes);
+    return toArrayBuffer(bytesOrArtifact.bytes);
   }
-  
+
   if (bytesOrArtifact instanceof Uint8Array) return bytesOrArtifact;
   if (bytesOrArtifact instanceof ArrayBuffer) return new Uint8Array(bytesOrArtifact);
   if (Array.isArray(bytesOrArtifact)) return new Uint8Array(bytesOrArtifact);
-  
+
   if (typeof bytesOrArtifact === 'string') {
     // Try to detect base64
     const compact = bytesOrArtifact.replace(/\s+/g, '');
@@ -41,7 +41,7 @@ function toUint8Array(bytesOrArtifact: any): Uint8Array {
     }
     return new TextEncoder().encode(bytesOrArtifact);
   }
-  
+
   try {
     const maybeArray = Array.from(bytesOrArtifact as any) as number[];
     return new Uint8Array(maybeArray);
@@ -62,7 +62,7 @@ function extractArtifact(result: any): Uint8Array {
     artifactCandidate = result.artifacts.main;
   }
   
-  return toUint8Array(artifactCandidate);
+  return toArrayBuffer(artifactCandidate);
 }
 
 /**
