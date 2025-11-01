@@ -88,10 +88,11 @@ async function init() {
     if (downloadPdfBtn) downloadPdfBtn.disabled = false;
   }
 
-  // Auto-render preview when the markdown changes using exporters.preview
+  // Auto-render preview when the markdown changes using new API
   const renderPreview = async () => {
     try {
-      await exporters.preview(engine, markdownInput.value, preview);
+      const result = exporters.render(engine, markdownInput.value);
+      exporters.toElement(result, preview);
     } catch (err) {
       console.error('Preview render error:', err);
       showStatus(`Preview render failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
@@ -121,11 +122,12 @@ async function init() {
   // Initial preview render on page load
   renderPreview().catch(err => console.error('Initial preview render failed:', err));
 
-  // Download PDF on demand using exporters.downloadDocument
+  // Download PDF on demand using new API
   downloadPdfBtn?.addEventListener('click', async () => {
     showLoading('Rendering document...');
     try {
-      await exporters.downloadDocument(engine, markdownInput.value, 'document.pdf' );
+      const result = exporters.render(engine, markdownInput.value, { format: 'pdf' });
+      exporters.download(result, 'document.pdf');
       showStatus('Download started — check your browser downloads', 'success');
     } catch (err) {
       console.error('Document render/download error:', err);
