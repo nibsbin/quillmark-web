@@ -30,43 +30,31 @@ This library takes an opinionated approach: **all Quills must be loaded from .zi
 
 ## Quick Start
 
-### Load and Render a Quill
+### Load and Render a Quill (New API)
 
 ```typescript
 import { Quillmark, loaders, exporters } from '@quillmark-test/web';
 
 async function renderDocument() {
-  // Load Quill from server using grouped loaders
+  // Load Quill from server
   const response = await fetch('/quills/my-template.zip');
   const zipBlob = await response.blob();
   const quillJson = await loaders.fromZip(zipBlob);
   
-  // Create engine and register using new() API
+  // Create engine and register template
   const engine = new Quillmark();
   engine.registerQuill(quillJson);
   
-  // Render and download PDF directly
+  // Render markdown
   const markdown = '# Hello World\n\nMy first document!';
-  await exporters.downloadDocument(engine, markdown, 'output.pdf', { format: 'pdf' });
+  const result = exporters.render(engine, markdown, { format: 'pdf' });
+  
+  // Download the rendered document
+  exporters.download(result, 'output.pdf');
 }
 ```
 
-#### Working with Blobs
-
-If you need more control, you can use `toBlob()` or `toDataUrl()`:
-
-```typescript
-// Get blob for custom handling
-const blob = await exporters.toBlob(engine, markdown, { format: 'pdf' });
-const url = URL.createObjectURL(blob);
-window.open(url);
-
-// Or get data URL
-const dataUrl = await exporters.toDataUrl(engine, markdown, { format: 'svg' });
-imgElement.src = dataUrl;
-```
-
-### Real-time SVG Preview
+### Real-time SVG Preview (New API)
 
 ```typescript
 import { Quillmark, loaders, exporters, utils } from '@quillmark-test/web';
@@ -83,31 +71,38 @@ async function setupEditor() {
   const editor = document.querySelector('#editor');
   const preview = document.querySelector('#preview');
   
-  // Use grouped utils for debounce
-  editor.addEventListener('input', utils.debounce(async () => {
-    await exporters.preview(engine, editor.value, preview, { format: 'svg' });
+  // Update preview as user types (debounced)
+  editor.addEventListener('input', utils.debounce(() => {
+    const result = exporters.render(engine, editor.value);
+    exporters.toElement(result, preview);
   }, 300));
 }
 ```
 
-### User Upload
+### Render Once, Export Many Times
 
 ```typescript
 import { Quillmark, loaders, exporters } from '@quillmark-test/web';
 
-const fileInput = document.querySelector('input[type="file"]');
-fileInput.accept = '.zip';
-fileInput.addEventListener('change', async (e) => {
-  const zipFile = e.target.files[0];
-  const quillJson = await loaders.fromZip(zipFile);
+async function exportMultipleFormats() {
+  const response = await fetch('/quills/letter.zip');
+  const quillJson = await loaders.fromZip(await response.blob());
   
   const engine = new Quillmark();
   engine.registerQuill(quillJson);
   
-  // Render and download
-  const markdown = '# My Document';
-  await exporters.downloadDocument(engine, markdown, 'output.pdf', { format: 'pdf' });
-});
+  const markdown = '# My Document\n\nContent here.';
+  
+  // Render once
+  const result = exporters.render(engine, markdown, { format: 'svg' });
+  
+  // Export to multiple formats efficiently
+  const blob = exporters.toBlob(result);
+  const dataUrl = await exporters.toDataUrl(result);
+  const preview = document.querySelector('#preview');
+  exporters.toElement(result, preview);
+  exporters.download(result, 'document.svg');
+}
 ```
 
 ## API Reference
@@ -145,26 +140,45 @@ Load a Quill from a .zip file. This is the **only** supported loading method.
 
 #### `exporters`
 
-Standalone functions for exporting rendered content:
+The new API provides a cleaner, more composable way to render and export documents:
 
 ```typescript
 import { exporters } from '@quillmark-test/web';
 
-// exporters.toBlob(engine, markdown, options?): Promise<Blob>
-const blob = await exporters.toBlob(engine, markdown, { format: 'pdf' });
+// NEW API - Recommended
+// ======================
 
-// exporters.toDataUrl(engine, markdown, options?): Promise<string>
-const dataUrl = await exporters.toDataUrl(engine, markdown, { format: 'svg' });
+// 1. Render markdown to get a result
+const result = exporters.render(engine, markdown, { format: 'pdf' });
+
+// 2. Convert result to various formats
+const blob = exporters.toBlob(result);
+const dataUrl = await exporters.toDataUrl(result);
+exporters.toElement(result, previewElement);
+exporters.download(result, 'output.pdf');
+
+// OLD API - Still supported for backward compatibility
+// =====================================================
+
+// exporters.exportToBlob(engine, markdown, options?): Promise<Blob>
+const blob = await exporters.exportToBlob(engine, markdown, { format: 'pdf' });
+
+// exporters.exportToDataUrl(engine, markdown, options?): Promise<string>
+const dataUrl = await exporters.exportToDataUrl(engine, markdown, { format: 'svg' });
 
 // exporters.preview(engine, markdown, element, options?): Promise<void>
-await exporters.preview(engine, markdown, previewElement, { format: 'svg' });
-
-// exporters.exportPreview(engine, markdown, options?): Promise<RenderResult>
-const result = await exporters.exportPreview(engine, markdown);
+await exporters.preview(engine, markdown, preview, { format: 'svg' });
 
 // exporters.downloadDocument(engine, markdown, filename, options?): Promise<void>
-await exporters.downloadDocument(engine, markdown, 'document.pdf', { format: 'pdf' });
+await exporters.downloadDocument(engine, markdown, 'output.pdf', { format: 'pdf' });
 ```
+
+**Why use the new API?**
+- Single `render()` function is the clear entry point
+- Render once, export many times (more efficient)
+- Pure conversion functions are easier to test and compose
+- Consistent naming and parameter ordering
+- Better separation of concerns
 
 #### `utils`
 

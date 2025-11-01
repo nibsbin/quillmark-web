@@ -68,9 +68,12 @@ async function renderDocument() {
   const engine = new Quillmark();
   engine.registerQuill(quillJson);
   
-  // Render markdown to PDF and download
+  // Render markdown
   const markdown = '# Hello World\n\nMy first document!';
-  await exporters.downloadDocument(engine, markdown, 'output.pdf', { format: 'pdf' });
+  const result = exporters.render(engine, markdown, { format: 'pdf' });
+  
+  // Download the PDF
+  exporters.download(result, 'output.pdf');
 }
 ```
 
@@ -91,8 +94,9 @@ async function setupEditor() {
   const preview = document.querySelector('#preview');
   
   // Update preview as user types (debounced)
-  editor.addEventListener('input', utils.debounce(async () => {
-    await exporters.preview(engine, editor.value, preview, { format: 'svg' });
+  editor.addEventListener('input', utils.debounce(() => {
+    const result = exporters.render(engine, editor.value);
+    exporters.toElement(result, preview);
   }, 300));
 }
 ```
@@ -217,6 +221,51 @@ If you need to modify templates locally:
 3. Test in the playground: `npm run dev`
 
 Note: Local changes to the subtree should ideally be contributed back to the upstream repository.
+
+## API Migration Guide
+
+### Version 0.4.0 - New Cleaner API
+
+We've introduced a cleaner, more semantically consistent API. The old API is still supported for backward compatibility.
+
+#### Before (Old API)
+```typescript
+// Multiple entry points with different patterns
+const blob = await exporters.exportToBlob(engine, markdown, { format: 'pdf' });
+const url = await exporters.exportToDataUrl(engine, markdown, { format: 'svg' });
+await exporters.preview(engine, markdown, element, { format: 'svg' });
+await exporters.downloadDocument(engine, markdown, 'doc.pdf', { format: 'pdf' });
+```
+
+#### After (New API - Recommended)
+```typescript
+// Single render function, then convert
+const result = exporters.render(engine, markdown, { format: 'pdf' });
+
+// Convert to different formats
+const blob = exporters.toBlob(result);
+const url = await exporters.toDataUrl(result);
+exporters.toElement(result, element);
+exporters.download(result, 'doc.pdf');
+
+// Benefit: Render once, export many times
+const pdfResult = exporters.render(engine, markdown, { format: 'pdf' });
+const svgResult = exporters.render(engine, markdown, { format: 'svg' });
+exporters.download(pdfResult, 'doc.pdf');
+exporters.download(svgResult, 'doc.svg');
+```
+
+#### Migration Checklist
+- Replace `exportToBlob(engine, markdown, options)` with `render(engine, markdown, options)` + `toBlob(result)`
+- Replace `exportToDataUrl(engine, markdown, options)` with `render(engine, markdown, options)` + `toDataUrl(result)`
+- Replace `preview(engine, markdown, element, options)` with `render(engine, markdown, options)` + `toElement(result, element)`
+- Replace `downloadDocument(engine, markdown, filename, options)` with `render(engine, markdown, options)` + `download(result, filename)`
+
+The new API provides:
+- ✅ Better composability (render once, export many times)
+- ✅ Consistent naming and parameter ordering
+- ✅ Clear separation of concerns
+- ✅ Easier to test and maintain
 
 ## Screenshots
 
