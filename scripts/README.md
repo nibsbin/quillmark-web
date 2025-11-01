@@ -4,7 +4,7 @@ This directory contains utility scripts for the Quillmark Web project.
 
 ## package-quills.js
 
-Packages quill templates from the `public/tonguetoquill-collection/quills/` directory into zip files for use in the playground.
+Packages quill templates from the `tonguetoquill-collection/quills/` directory into zip files for use in the playground.
 
 ### Usage
 
@@ -13,7 +13,7 @@ npm run package:quills
 ```
 
 This script:
-1. Reads all quill directories from `public/tonguetoquill-collection/quills/`
+1. Reads all quill directories from `tonguetoquill-collection/quills/`
 2. Packages each quill into a zip file
 3. Saves the zip files to `public/quills/`
 
@@ -26,5 +26,5 @@ This script:
 
 Run this script whenever:
 - You update the `tonguetoquill-collection` subtree
-- You make changes to quill templates in `public/tonguetoquill-collection/quills/`
+- You make changes to quill templates in `tonguetoquill-collection/quills/`
 - You need to regenerate the playground quill zip files

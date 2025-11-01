@@ -112,7 +112,7 @@ async function exportMultipleFormats() {
 The `Quillmark` class is re-exported directly from `@quillmark-test/wasm`. Use `new Quillmark()` to create instances:
 
 ```typescript
-import { Quillmark } from './lib';
+import { Quillmark } from '@quillmark-test/web';
 
 const engine = new Quillmark();
 ```
@@ -124,7 +124,7 @@ All WASM methods are available: `registerQuill()`, `render()`, etc.
 #### `loaders`
 
 ```typescript
-import { loaders } from './lib';
+import { loaders } from '@quillmark-test/web';
 
 // loaders.fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson>
 const quillJson = await loaders.fromZip(zipBlob);
@@ -183,7 +183,7 @@ await exporters.downloadDocument(engine, markdown, 'output.pdf', { format: 'pdf'
 #### `utils`
 
 ```typescript
-import { utils } from './lib';
+import { utils } from '@quillmark-test/web';
 
 // utils.debounce(fn, wait): Function
 const debouncedHandler = utils.debounce(() => { /* ... */ }, 300);
