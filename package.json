@@ -52,7 +52,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@quillmark-test/wasm": "^0.6.8",
+    "@quillmark-test/wasm": "^0.6.11",
     "fflate": "^0.8.2"
   },
   "devDependencies": {
