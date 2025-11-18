@@ -58,6 +58,7 @@ export interface QuillInfo {
 
 /**
  * Artifact from render result
+ * @deprecated Legacy format - use RenderResult.artifacts directly
  */
 export interface Artifact {
   bytes: Uint8Array;
@@ -65,10 +66,16 @@ export interface Artifact {
 }
 
 /**
- * Result from rendering
+ * Result from rendering (standardized format)
+ *
+ * This interface represents the standardized render result contract.
+ * All artifacts are Uint8Array values, with 'main' always present.
  */
 export interface RenderResult {
-  artifacts: Artifact[];
+  artifacts: {
+    main: Uint8Array;
+    [key: string]: Uint8Array;
+  };
   outputFormat: 'pdf' | 'svg' | 'txt';
 }
 
