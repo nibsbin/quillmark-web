@@ -212,7 +212,7 @@ export function render(
 /**
  * Convert a render result to a Blob.
  *
- * @param result - RenderResult from render() (or legacy format)
+ * @param result - RenderResult from render()
  * @returns Blob containing the rendered output
  *
  * @example
@@ -220,13 +220,10 @@ export function render(
  * const blob = toBlob(result);
  * const url = URL.createObjectURL(blob);
  */
-export function toBlob(result: RenderResult | any): Blob {
-  // Normalize input to handle legacy formats
-  const normalized = normalizeWasmResult(result);
-
-  const bytes = extractArtifact(normalized);
+export function toBlob(result: RenderResult): Blob {
+  const bytes = extractArtifact(result);
   const uint8 = new Uint8Array(bytes);
-  const format = normalized.outputFormat;
+  const format = result.outputFormat;
 
   // Determine MIME type
   const mimeType = format === 'pdf' ? 'application/pdf'
@@ -239,7 +236,7 @@ export function toBlob(result: RenderResult | any): Blob {
 /**
  * Convert a render result to a data URL.
  *
- * @param result - RenderResult from render() (or legacy format)
+ * @param result - RenderResult from render()
  * @returns Promise resolving to data URL string
  *
  * @example
@@ -247,7 +244,7 @@ export function toBlob(result: RenderResult | any): Blob {
  * const dataUrl = await toDataUrl(result);
  * imgElement.src = dataUrl;
  */
-export async function toDataUrl(result: RenderResult | any): Promise<string> {
+export async function toDataUrl(result: RenderResult): Promise<string> {
   const blob = toBlob(result);
   
   // Check if we're in a browser environment with FileReader
@@ -283,7 +280,7 @@ export async function toDataUrl(result: RenderResult | any): Promise<string> {
  * Note: SVG content is rendered as-is. If the SVG source is untrusted,
  * consider sanitizing it before rendering to prevent XSS attacks.
  *
- * @param result - RenderResult from render() (or legacy format)
+ * @param result - RenderResult from render()
  * @param element - Target HTML element
  *
  * @example
@@ -292,15 +289,12 @@ export async function toDataUrl(result: RenderResult | any): Promise<string> {
  * toElement(result, preview);
  */
 export function toElement(
-  result: RenderResult | any,
+  result: RenderResult,
   element: HTMLElement
 ): void {
-  // Normalize input to handle legacy formats
-  const normalized = normalizeWasmResult(result);
-
-  const bytes = extractArtifact(normalized);
+  const bytes = extractArtifact(result);
   const uint8 = new Uint8Array(bytes);
-  const format = normalized.outputFormat;
+  const format = result.outputFormat;
   
   // Clear existing content
   element.innerHTML = '';
@@ -334,7 +328,7 @@ export function toElement(
  *
  * Triggers a browser download with the appropriate MIME type.
  *
- * @param result - RenderResult from render() (or legacy format)
+ * @param result - RenderResult from render()
  * @param filename - Name for the downloaded file
  *
  * @example
@@ -342,7 +336,7 @@ export function toElement(
  * download(result, 'document.pdf');
  */
 export function download(
-  result: RenderResult | any,
+  result: RenderResult,
   filename: string
 ): void {
   const blob = toBlob(result);
