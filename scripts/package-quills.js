@@ -14,35 +14,15 @@ import { join, relative } from 'path';
 import { zipSync } from 'fflate';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { FilesystemSource, buildFileTree } from '../src/lib/fileSources.js';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const QUILLS_SOURCE_DIR = join(__dirname, '../tonguetoquill-collection/quills');
 const QUILLS_OUTPUT_DIR = join(__dirname, '../public/quills');
-
-/**
- * Recursively read all files in a directory
- */
-async function readDirectoryRecursive(dir, baseDir = dir) {
-  const entries = await readdir(dir, { withFileTypes: true });
-  const files = {};
-
-  for (const entry of entries) {
-    const fullPath = join(dir, entry.name);
-    const relativePath = relative(baseDir, fullPath);
-
-    if (entry.isDirectory()) {
-      const subFiles = await readDirectoryRecursive(fullPath, baseDir);
-      Object.assign(files, subFiles);
-    } else {
-      const content = await readFile(fullPath);
-      files[relativePath] = content;
-    }
-  }
-
-  return files;
-}
 
 /**
  * Package a single quill into a zip file
@@ -53,8 +33,12 @@ async function packageQuill(quillName) {
 
   console.log(`Packaging ${quillName}...`);
 
-  // Read all files in the quill directory
-  const files = await readDirectoryRecursive(quillDir);
+  // Read all files in the quill directory using the unified abstraction
+  const source = new FilesystemSource(quillDir, fs, path);
+  const files = await buildFileTree(source, {
+    format: 'flat',
+    rawBuffers: true  // Keep as raw buffers for zipSync
+  });
 
   // Check if Quill.toml exists
   if (!files['Quill.toml']) {

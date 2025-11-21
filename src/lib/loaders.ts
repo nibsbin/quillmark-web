@@ -1,11 +1,11 @@
 /**
  * Quill loading utilities
- * 
+ *
  * The opinionated approach: All Quills must be loaded from .zip files.
  */
 
 import { unzip } from 'fflate';
-import { detectBinaryFile, insertPath } from './utils';
+import { ZipSource, buildFileTree } from './fileSources.js';
 
 /**
  * Load a Quill template from a .zip file
@@ -48,21 +48,19 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
   } else {
     buffer = await (zipFile as Blob).arrayBuffer();
   }
-  
-  const quillObj: Record<string, any> = {};
-  
+
   // Unzip using fflate
   return new Promise((resolve, reject) => {
-    unzip(new Uint8Array(buffer), (err, unzipped) => {
+    unzip(new Uint8Array(buffer), async (err, unzipped) => {
       if (err) {
         reject(new Error(`Failed to unzip file: ${err.message}`));
         return;
       }
-      
+
       // Check if Quill.toml is nested inside a single top-level folder
       let pathPrefix = '';
       const hasQuillTomlAtRoot = Object.keys(unzipped).some(path => path === 'Quill.toml' || path === 'Quill.toml/');
-      
+
       if (!hasQuillTomlAtRoot) {
         // Find all top-level entries (files and folders)
         const topLevelEntries = new Set<string>();
@@ -72,7 +70,7 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
             topLevelEntries.add(path.substring(0, firstSlash));
           }
         }
-        
+
         // If there's only one top-level folder, check if it contains Quill.toml
         if (topLevelEntries.size === 1) {
           const [topFolder] = Array.from(topLevelEntries);
@@ -82,39 +80,24 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
           }
         }
       }
-      
-      // Process each file in the zip
-      for (const [path, fileData] of Object.entries(unzipped)) {
-        // Skip directories (they end with /)
-        if (path.endsWith('/')) continue;
-        
-        // Skip files outside the path prefix
-        if (pathPrefix && !path.startsWith(pathPrefix)) continue;
-        
-        // Remove the path prefix if it exists
-        const relativePath = pathPrefix ? path.substring(pathPrefix.length) : path;
-        const parts = relativePath.split('/');
-        
-        if (detectBinaryFile(path)) {
-          // Binary file - store as number array
-          const bytes = Array.from(fileData);
-          insertPath(quillObj, parts, { contents: bytes });
-        } else {
-          // Text file - decode as UTF-8
-          const text = new TextDecoder().decode(fileData);
-          insertPath(quillObj, parts, { contents: text });
-        }
-      }
-      
+
+      // Use the unified file source abstraction
+      const source = new ZipSource(unzipped, pathPrefix);
+      const files = await buildFileTree(source, {
+        format: 'nested',
+        wrapContents: true,  // Wrap in { contents: ... }
+        detectBinary: true   // Detect and handle binary files
+      });
+
       // Validate that Quill.toml exists
-      if (!quillObj['Quill.toml']) {
+      if (!files['Quill.toml']) {
         reject(new Error('Quill.toml not found in zip file. Make sure it exists at the root of the archive.'));
         return;
       }
-      
+
       // Wrap in the expected format for Quill.fromJson
       resolve({
-        files: quillObj
+        files: files
       });
     });
   });
