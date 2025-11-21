@@ -1,7 +1,7 @@
 # Simplification Cascades - Quillmark Web
 
 > **Date:** 2025-11-21 (Updated)
-> **Status:** In Progress - 1 of 5 cascades completed
+> **Status:** In Progress - 2 of 5 cascades completed
 > **Impact:** High - These cascades could eliminate significant complexity
 
 ## Overview
@@ -84,6 +84,8 @@ Does every current use case fit?
 ---
 
 ## Cascade 2: Binary File Detection Duplication
+
+> **✅ COMPLETED** - 2025-11-21
 
 **Locations:**
 - `src/lib/utils.ts:5-26` (Set-based)
@@ -399,7 +401,7 @@ Does it cover all formats?
 | Cascade | Impact | Effort | Priority | Status | Eliminates |
 |---------|--------|--------|----------|--------|------------|
 | 1. Artifact Type Juggling | 🔥 High | Medium | **P0** | ✅ Complete | 10+ cases, 60 lines |
-| 2. Binary Detection | Medium | Low | **P1** | Pending | 1 impl, divergence risk |
+| 2. Binary Detection | Medium | Low | **P1** | ✅ Complete | 1 impl, divergence risk |
 | 3. Directory Loading | Medium | Medium | **P2** | Pending | 2 impls, 40 lines |
 | 4. Markdown Extraction | Low | Low | **P2** | Pending | 1 impl, 9 lines |
 | 5. Format Configuration | Medium | Low | **P1** | Pending | Repeated mappings |
@@ -407,7 +409,7 @@ Does it cover all formats?
 ### Recommended Order
 
 1. **✅ P0 - Artifact Type Juggling:** Completed - Standardized RenderResult type eliminates 10+ type conversion paths
-2. **P1 - Binary Detection:** Quick win, prevents future bugs
+2. **✅ P1 - Binary Detection:** Completed - Single source of truth for binary file detection
 3. **P1 - Format Configuration:** Quick win, cleaner architecture
 4. **P2 - Markdown Extraction:** Minor improvement, low risk
 5. **P2 - Directory Loading:** Good refactor, but requires careful testing
@@ -425,9 +427,10 @@ Does it cover all formats?
 1. ✅ ~~Review and validate these findings with the team~~
 2. ✅ ~~Create issues for P0 and P1 cascades~~
 3. ✅ ~~For Cascade 1, coordinate with WASM team on standardizing `RenderResult`~~
-4. **Current:** Implement P1 quick wins (Binary Detection, Format Configuration)
-5. Measure impact of Cascade 1 implementation
+4. ✅ ~~Implement Binary Detection (Cascade 2)~~
+5. **Current:** Implement remaining P1 quick win (Format Configuration - Cascade 5)
 6. Continue with P2 cascades (Markdown Extraction, Directory Loading)
+7. Measure cumulative impact of completed cascades
 
 ---
 
@@ -456,14 +459,33 @@ Does it cover all formats?
 - `src/lib/exporters.test.ts` - Updated tests
 - `README.md` - Updated documentation
 
+### Cascade 2: Binary File Detection Duplication (Completed 2025-11-21)
+
+**Changes Made:**
+- Exported `BINARY_EXTENSIONS` constant from `src/lib/utils.ts` for reusability
+- Replaced regex-based binary detection in `src/lib/quillLoader.js` with import of `detectBinaryFile()`
+- Eliminated duplicate implementation and ensured single source of truth
+- Unified extension list now includes all formats: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.bmp`, `.ico`, `.pdf`, `.ttf`, `.otf`, `.woff`, `.woff2`, `.zip`, `.tar`, `.gz`
+
+**Impact:**
+- Eliminated 1 duplicate implementation (regex vs Set-based)
+- Prevented future extension list divergence
+- Improved maintainability - all binary detection now happens in one place
+- Enhanced extension coverage (quillLoader.js now supports `.webp`, `.bmp`, `.ico`, `.zip`, `.tar`, `.gz`)
+
+**Files Modified:**
+- `src/lib/utils.ts` - Exported BINARY_EXTENSIONS constant
+- `src/lib/quillLoader.js` - Removed inline regex, imported shared function
+
 ---
 
 ## Architectural Insight
 
-The codebase recently completed a successful API redesign (see `prose/designs/api-redesign.md`) which simplified the **external API**. With Cascade 1 complete, artifact handling is now standardized. Remaining complexity stems from:
+The codebase recently completed a successful API redesign (see `prose/designs/api-redesign.md`) which simplified the **external API**. With Cascades 1 and 2 complete, artifact handling is standardized and binary detection is unified. Remaining complexity stems from:
 
 - ✅ ~~Supporting multiple artifact formats (WASM evolution)~~ - **Resolved by Cascade 1**
-- Duplicate utilities across scripts and lib code (Cascades 2, 3, 4)
+- ✅ ~~Duplicate binary detection implementations~~ - **Resolved by Cascade 2**
+- Duplicate utilities across scripts and lib code (Cascades 3, 4)
 - Node.js vs Browser dual-targeting (unclear requirement)
 
-**Key Learning:** External API simplicity doesn't guarantee internal simplicity. These cascades represent opportunities to bring the implementation quality up to match the clean API design. Cascade 1's completion demonstrates the value of this approach - standardizing the WASM contract eliminated significant downstream complexity.
+**Key Learning:** External API simplicity doesn't guarantee internal simplicity. These cascades represent opportunities to bring the implementation quality up to match the clean API design. Cascades 1 and 2 demonstrate the value of this approach - standardizing contracts and eliminating duplication reduces complexity and maintenance burden while improving code reliability.
