@@ -4,25 +4,22 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { FilesystemSourceSync, buildFileTree } from './fileSources.js';
+import { readDirectorySync, buildFileTree } from './fileSources.js';
 
 /**
  * Load a Quill directory into WASM-compatible JSON format
  * @param {string} quillPath - Path to Quill directory
  * @returns {object} - Quill JSON with {files: {...}}
  */
-export async function loadQuill(quillPath) {
-  // Use the unified file source abstraction
-  const source = new FilesystemSourceSync(quillPath, fs, path);
-  const files = await buildFileTree(source, {
+export function loadQuill(quillPath) {
+  const fileMap = readDirectorySync(quillPath, fs, path);
+  const files = buildFileTree(fileMap, {
     format: 'nested',
-    wrapContents: true,  // Wrap in { contents: ... }
-    detectBinary: true   // Detect and handle binary files
+    wrapContents: true,
+    detectBinary: true
   });
 
-  return {
-    files: files
-  };
+  return { files };
 }
 
 /**

@@ -9,12 +9,12 @@
  * Usage: node scripts/package-quills.js
  */
 
-import { readdir, readFile, writeFile, mkdir } from 'fs/promises';
-import { join, relative } from 'path';
+import { readdir, writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 import { zipSync } from 'fflate';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { FilesystemSource, buildFileTree } from '../src/lib/fileSources.js';
+import { readDirectoryAsync, buildFileTree } from '../src/lib/fileSources.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -33,11 +33,11 @@ async function packageQuill(quillName) {
 
   console.log(`Packaging ${quillName}...`);
 
-  // Read all files in the quill directory using the unified abstraction
-  const source = new FilesystemSource(quillDir, fs, path);
-  const files = await buildFileTree(source, {
+  // Read directory and build flat tree for zipping
+  const fileMap = await readDirectoryAsync(quillDir, fs, path);
+  const files = buildFileTree(fileMap, {
     format: 'flat',
-    rawBuffers: true  // Keep as raw buffers for zipSync
+    rawBuffers: true
   });
 
   // Check if Quill.toml exists

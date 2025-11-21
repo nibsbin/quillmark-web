@@ -5,7 +5,7 @@
  */
 
 import { unzip } from 'fflate';
-import { ZipSource, buildFileTree } from './fileSources.js';
+import { extractZipFiles, buildFileTree } from './fileSources.js';
 
 /**
  * Load a Quill template from a .zip file
@@ -51,7 +51,7 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
 
   // Unzip using fflate
   return new Promise((resolve, reject) => {
-    unzip(new Uint8Array(buffer), async (err, unzipped) => {
+    unzip(new Uint8Array(buffer), (err, unzipped) => {
       if (err) {
         reject(new Error(`Failed to unzip file: ${err.message}`));
         return;
@@ -81,12 +81,12 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
         }
       }
 
-      // Use the unified file source abstraction
-      const source = new ZipSource(unzipped, pathPrefix);
-      const files = await buildFileTree(source, {
+      // Extract files from zip and build tree
+      const fileMap = extractZipFiles(unzipped, pathPrefix);
+      const files = buildFileTree(fileMap, {
         format: 'nested',
-        wrapContents: true,  // Wrap in { contents: ... }
-        detectBinary: true   // Detect and handle binary files
+        wrapContents: true,
+        detectBinary: true
       });
 
       // Validate that Quill.toml exists
