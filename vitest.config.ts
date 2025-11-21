@@ -9,7 +9,7 @@ export default defineConfig({
   ],
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'happy-dom',
     include: ['src/**/*.{test,spec}.{js,ts}'],
     deps: {
       inline: ['@quillmark-test/wasm']

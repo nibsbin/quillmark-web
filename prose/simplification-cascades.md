@@ -1,8 +1,8 @@
 # Simplification Cascades - Quillmark Web
 
 > **Date:** 2025-11-21 (Updated)
-> **Status:** In Progress - 2 of 5 cascades completed
-> **Impact:** High - These cascades could eliminate significant complexity
+> **Status:** In Progress - 4 of 5 cascades completed
+> **Impact:** High - These cascades eliminate significant complexity
 
 ## Overview
 
@@ -304,6 +304,8 @@ Does it handle all cases?
 
 ## Cascade 5: Format Configuration Duplication
 
+> **✅ COMPLETED** - 2025-11-21
+
 **Locations:**
 - `src/lib/exporters.ts:174-176` in `toBlob()`
 - `src/lib/exporters.ts:247-268` in `toElement()`
@@ -402,17 +404,17 @@ Does it cover all formats?
 |---------|--------|--------|----------|--------|------------|
 | 1. Artifact Type Juggling | 🔥 High | Medium | **P0** | ✅ Complete | 10+ cases, 60 lines |
 | 2. Binary Detection | Medium | Low | **P1** | ✅ Complete | 1 impl, divergence risk |
-| 3. Directory Loading | Medium | Medium | **P2** | Pending | 2 impls, 40 lines |
+| 3. Directory Loading | Medium | Medium | **P2** | ✅ Complete | 2 impls, 40 lines |
 | 4. Markdown Extraction | Low | Low | **P2** | Pending | 1 impl, 9 lines |
-| 5. Format Configuration | Medium | Low | **P1** | Pending | Repeated mappings |
+| 5. Format Configuration | Medium | Low | **P1** | ✅ Complete | Repeated mappings |
 
 ### Recommended Order
 
 1. **✅ P0 - Artifact Type Juggling:** Completed - Standardized RenderResult type eliminates 10+ type conversion paths
 2. **✅ P1 - Binary Detection:** Completed - Single source of truth for binary file detection
-3. **P1 - Format Configuration:** Quick win, cleaner architecture
-4. **P2 - Markdown Extraction:** Minor improvement, low risk
-5. **P2 - Directory Loading:** Good refactor, but requires careful testing
+3. **✅ P2 - Directory Loading:** Completed - Unified file tree construction
+4. **✅ P1 - Format Configuration:** Completed - Centralized format configuration with render functions
+5. **P2 - Markdown Extraction:** Minor improvement, low risk - Only remaining cascade
 
 ### Additional Cascades (Medium Priority)
 
@@ -428,9 +430,11 @@ Does it cover all formats?
 2. ✅ ~~Create issues for P0 and P1 cascades~~
 3. ✅ ~~For Cascade 1, coordinate with WASM team on standardizing `RenderResult`~~
 4. ✅ ~~Implement Binary Detection (Cascade 2)~~
-5. **Current:** Implement remaining P1 quick win (Format Configuration - Cascade 5)
-6. Continue with P2 cascades (Markdown Extraction, Directory Loading)
-7. Measure cumulative impact of completed cascades
+5. ✅ ~~Implement Directory Loading (Cascade 3)~~
+6. ✅ ~~Implement Format Configuration (Cascade 5)~~
+7. **Current:** Only Cascade 4 (Markdown Extraction) remains - Optional minor improvement
+8. Consider additional cascades (config file consolidation, etc.)
+9. Measure cumulative impact of completed cascades
 
 ---
 
@@ -477,15 +481,38 @@ Does it cover all formats?
 - `src/lib/utils.ts` - Exported BINARY_EXTENSIONS constant
 - `src/lib/quillLoader.js` - Removed inline regex, imported shared function
 
+### Cascade 5: Format Configuration Duplication (Completed 2025-11-21)
+
+**Changes Made:**
+- Added `render` function to `FormatConfig` interface for format-specific rendering logic
+- Implemented render functions for PDF and SVG formats in `FORMAT_CONFIG` object
+- Simplified `toElement()` function from ~20 lines with if/else branching to 8 lines using config-driven approach
+- Added comprehensive tests for `toElement()` function covering SVG and PDF rendering
+- Configured test environment with happy-dom for DOM-based testing
+
+**Impact:**
+- Eliminated if/else branching for format-specific rendering logic
+- Centralized format configuration (MIME type, extension, render function) in single object
+- Made adding new formats significantly easier - just add to `FORMAT_CONFIG`
+- Improved code maintainability and reduced duplication
+- Format handling now follows Open/Closed Principle - open for extension, closed for modification
+
+**Files Modified:**
+- `src/lib/exporters.ts` - Enhanced FormatConfig interface and simplified toElement()
+- `src/lib/exporters.test.ts` - Added comprehensive toElement() tests
+- `vitest.config.ts` - Changed environment from 'node' to 'happy-dom' for DOM testing
+- `package.json` - Added happy-dom dev dependency (via npm install)
+
 ---
 
 ## Architectural Insight
 
-The codebase recently completed a successful API redesign (see `prose/designs/api-redesign.md`) which simplified the **external API**. With Cascades 1 and 2 complete, artifact handling is standardized and binary detection is unified. Remaining complexity stems from:
+The codebase recently completed a successful API redesign (see `prose/designs/api-redesign.md`) which simplified the **external API**. With Cascades 1, 2, 3, and 5 complete, the codebase is significantly cleaner:
 
 - ✅ ~~Supporting multiple artifact formats (WASM evolution)~~ - **Resolved by Cascade 1**
 - ✅ ~~Duplicate binary detection implementations~~ - **Resolved by Cascade 2**
-- Duplicate utilities across scripts and lib code (Cascades 3, 4)
-- Node.js vs Browser dual-targeting (unclear requirement)
+- ✅ ~~Duplicate directory loading logic~~ - **Resolved by Cascade 3**
+- ✅ ~~Format-specific rendering duplication~~ - **Resolved by Cascade 5**
+- Duplicate markdown extraction utility (Cascade 4) - Minor remaining improvement
 
-**Key Learning:** External API simplicity doesn't guarantee internal simplicity. These cascades represent opportunities to bring the implementation quality up to match the clean API design. Cascades 1 and 2 demonstrate the value of this approach - standardizing contracts and eliminating duplication reduces complexity and maintenance burden while improving code reliability.
+**Key Learning:** External API simplicity doesn't guarantee internal simplicity. These cascades represent opportunities to bring the implementation quality up to match the clean API design. The completed cascades demonstrate the value of this approach - standardizing contracts, centralizing configuration, and eliminating duplication reduces complexity and maintenance burden while improving code reliability and extensibility.
