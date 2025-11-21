@@ -6,13 +6,12 @@
  * to the underlying WASM API.
  */
 
-import { 
+import {
   render as render_,
   toBlob as toBlob_,
   toDataUrl as toDataUrl_,
   toElement as toElement_,
-  download as download_,
-  toArrayBuffer as toArrayBuffer_
+  download as download_
 } from './exporters';
 import { fromZip as _fromZip } from './loaders';
 import { detectBinaryFile, debounce } from './utils';
@@ -21,11 +20,12 @@ import { detectBinaryFile, debounce } from './utils';
 export { Quillmark } from '@quillmark-test/wasm';
 
 // Export types
-export type { 
-  QuillJson, 
-  FileTree, 
-  FileNode, 
+export type {
+  QuillJson,
+  FileTree,
+  FileNode,
   QuillMetadata,
+  RenderFormat,
   RenderOptions,
   ParsedDocument,
   QuillInfo,
@@ -43,7 +43,6 @@ export const exporters = {
   toBlob: toBlob_,
   toDataUrl: toDataUrl_,
   toElement: toElement_,
-  toArrayBuffer: toArrayBuffer_,
   download: download_
 };
 

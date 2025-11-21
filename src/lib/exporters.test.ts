@@ -30,7 +30,7 @@ QUILL: test_quill
 describe('render', () => {
   describe('Unit tests (with mocks)', () => {
     // Mock Quillmark engine
-    const createMockEngine = (artifactBytes: Uint8Array, outputFormat: 'pdf' | 'svg' | 'txt' = 'pdf') => {
+    const createMockEngine = (artifactBytes: Uint8Array, outputFormat: 'pdf' | 'svg' = 'pdf') => {
       return {
         render: vi.fn(() => ({
           artifacts: [{
