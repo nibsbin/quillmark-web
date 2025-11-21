@@ -1,7 +1,7 @@
 # Simplification Cascades - Quillmark Web
 
-> **Date:** 2025-11-15
-> **Status:** Identified
+> **Date:** 2025-11-21 (Updated)
+> **Status:** In Progress - 1 of 5 cascades completed
 > **Impact:** High - These cascades could eliminate significant complexity
 
 ## Overview
@@ -11,6 +11,8 @@ This document identifies 5 major simplification cascades in the quillmark-web co
 ---
 
 ## Cascade 1: Artifact Type Juggling 🔥 HIGHEST IMPACT
+
+> **✅ COMPLETED** - 2025-11-21 (Commit: fcfdab4)
 
 **Location:** `src/lib/exporters.ts:19-70`
 
@@ -394,17 +396,17 @@ Does it cover all formats?
 
 ## Summary & Prioritization
 
-| Cascade | Impact | Effort | Priority | Eliminates |
-|---------|--------|--------|----------|------------|
-| 1. Artifact Type Juggling | 🔥 High | Medium | **P0** | 10+ cases, 60 lines |
-| 2. Binary Detection | Medium | Low | **P1** | 1 impl, divergence risk |
-| 3. Directory Loading | Medium | Medium | **P2** | 2 impls, 40 lines |
-| 4. Markdown Extraction | Low | Low | **P2** | 1 impl, 9 lines |
-| 5. Format Configuration | Medium | Low | **P1** | Repeated mappings |
+| Cascade | Impact | Effort | Priority | Status | Eliminates |
+|---------|--------|--------|----------|--------|------------|
+| 1. Artifact Type Juggling | 🔥 High | Medium | **P0** | ✅ Complete | 10+ cases, 60 lines |
+| 2. Binary Detection | Medium | Low | **P1** | Pending | 1 impl, divergence risk |
+| 3. Directory Loading | Medium | Medium | **P2** | Pending | 2 impls, 40 lines |
+| 4. Markdown Extraction | Low | Low | **P2** | Pending | 1 impl, 9 lines |
+| 5. Format Configuration | Medium | Low | **P1** | Pending | Repeated mappings |
 
 ### Recommended Order
 
-1. **P0 - Artifact Type Juggling:** Biggest complexity reduction, but requires WASM contract change
+1. **✅ P0 - Artifact Type Juggling:** Completed - Standardized RenderResult type eliminates 10+ type conversion paths
 2. **P1 - Binary Detection:** Quick win, prevents future bugs
 3. **P1 - Format Configuration:** Quick win, cleaner architecture
 4. **P2 - Markdown Extraction:** Minor improvement, low risk
@@ -420,20 +422,48 @@ Does it cover all formats?
 
 ## Next Steps
 
-1. Review and validate these findings with the team
-2. Create issues for P0 and P1 cascades
-3. For Cascade 1, coordinate with WASM team on standardizing `RenderResult`
-4. Implement quick wins (P1) to build momentum
-5. Measure impact after each cascade
+1. ✅ ~~Review and validate these findings with the team~~
+2. ✅ ~~Create issues for P0 and P1 cascades~~
+3. ✅ ~~For Cascade 1, coordinate with WASM team on standardizing `RenderResult`~~
+4. **Current:** Implement P1 quick wins (Binary Detection, Format Configuration)
+5. Measure impact of Cascade 1 implementation
+6. Continue with P2 cascades (Markdown Extraction, Directory Loading)
+
+---
+
+## Implementation Notes
+
+### Cascade 1: Artifact Type Juggling (Completed 2025-11-21)
+
+**Commit:** fcfdab4 - "Implement Cascade 1: Eliminate artifact type juggling (#34)"
+
+**Changes Made:**
+- Standardized `RenderResult` interface with consistent `artifacts.main` structure
+- Eliminated `toArrayBuffer()` type juggling (7+ input type variations)
+- Simplified `extractArtifact()` from multiple structural paths to single access pattern
+- Updated all exporters to work with standardized result type
+- Removed base64 detection, recursive unwrapping, and defensive type conversions
+
+**Impact:**
+- Reduced exporter complexity by ~60 lines
+- Eliminated 10+ different artifact input/output paths
+- Type safety improved throughout the codebase
+- Cleaner API surface for future enhancements
+
+**Files Modified:**
+- `src/lib/exporters.ts` - Core simplification
+- `src/lib/types.ts` - Standardized RenderResult interface
+- `src/lib/exporters.test.ts` - Updated tests
+- `README.md` - Updated documentation
 
 ---
 
 ## Architectural Insight
 
-The codebase recently completed a successful API redesign (see `prose/designs/api-redesign.md`) which simplified the **external API**. However, the **internal implementation** still carries complexity from:
+The codebase recently completed a successful API redesign (see `prose/designs/api-redesign.md`) which simplified the **external API**. With Cascade 1 complete, artifact handling is now standardized. Remaining complexity stems from:
 
-- Supporting multiple artifact formats (WASM evolution)
-- Duplicate utilities across scripts and lib code
+- ✅ ~~Supporting multiple artifact formats (WASM evolution)~~ - **Resolved by Cascade 1**
+- Duplicate utilities across scripts and lib code (Cascades 2, 3, 4)
 - Node.js vs Browser dual-targeting (unclear requirement)
 
-**Key Learning:** External API simplicity doesn't guarantee internal simplicity. These cascades represent opportunities to bring the implementation quality up to match the clean API design.
+**Key Learning:** External API simplicity doesn't guarantee internal simplicity. These cascades represent opportunities to bring the implementation quality up to match the clean API design. Cascade 1's completion demonstrates the value of this approach - standardizing the WASM contract eliminated significant downstream complexity.
