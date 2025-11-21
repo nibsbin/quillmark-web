@@ -4,6 +4,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { detectBinaryFile } from './utils.js';
 
 /**
  * Recursively load a directory structure into the Quill JSON format
@@ -22,7 +23,7 @@ function loadDirectory(dirPath) {
       result[entry.name] = loadDirectory(fullPath);
     } else if (entry.isFile()) {
       // Check if file is binary based on extension
-      const isBinary = /\.(png|jpg|jpeg|gif|pdf|woff|woff2|ttf|otf)$/i.test(entry.name);
+      const isBinary = detectBinaryFile(entry.name);
 
       if (isBinary) {
         // Load as byte array

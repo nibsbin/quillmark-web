@@ -2,7 +2,7 @@
  * Utility functions for Quillmark web library
  */
 
-const BINARY_EXTENSIONS = new Set([
+export const BINARY_EXTENSIONS = new Set([
   '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.ico',
   '.pdf', '.ttf', '.otf', '.woff', '.woff2',
   '.zip', '.tar', '.gz'
