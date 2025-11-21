@@ -4,45 +4,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { detectBinaryFile } from './utils.js';
-
-/**
- * Recursively load a directory structure into the Quill JSON format
- * @param {string} dirPath - Path to directory to load
- * @returns {object} - Directory structure as nested objects with {contents: ...}
- */
-function loadDirectory(dirPath) {
-  const result = {};
-  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dirPath, entry.name);
-
-    if (entry.isDirectory()) {
-      // Recursively load subdirectories
-      result[entry.name] = loadDirectory(fullPath);
-    } else if (entry.isFile()) {
-      // Check if file is binary based on extension
-      const isBinary = detectBinaryFile(entry.name);
-
-      if (isBinary) {
-        // Load as byte array
-        const buffer = fs.readFileSync(fullPath);
-        result[entry.name] = {
-          contents: Array.from(buffer)
-        };
-      } else {
-        // Load as UTF-8 string
-        const text = fs.readFileSync(fullPath, 'utf8');
-        result[entry.name] = {
-          contents: text
-        };
-      }
-    }
-  }
-
-  return result;
-}
+import { readDirectorySync, buildFileTree } from './fileSources.js';
 
 /**
  * Load a Quill directory into WASM-compatible JSON format
@@ -50,11 +12,14 @@ function loadDirectory(dirPath) {
  * @returns {object} - Quill JSON with {files: {...}}
  */
 export function loadQuill(quillPath) {
-  const files = loadDirectory(quillPath);
+  const fileMap = readDirectorySync(quillPath, fs, path);
+  const files = buildFileTree(fileMap, {
+    format: 'nested',
+    wrapContents: true,
+    detectBinary: true
+  });
 
-  return {
-    files: files
-  };
+  return { files };
 }
 
 /**
