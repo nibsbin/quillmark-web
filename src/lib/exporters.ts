@@ -3,9 +3,10 @@
  */
 
 import { Quillmark } from '@quillmark-test/wasm';
-import type { 
+import type {
   RenderOptions,
   RenderResult,
+  RenderFormat,
   QuillInfo,
   ParsedDocument
 } from './types';
@@ -13,60 +14,108 @@ import type {
 /** Time to wait before revoking blob URLs (in milliseconds) */
 const BLOB_URL_REVOKE_DELAY = 1500;
 
-/*
- * Convert various artifact byte formats to ArrayBuffer-backed Uint8Array
+/**
+ * Format configuration (Cascade 5 pattern)
+ *
+ * Centralized configuration for each supported format.
+ * Eliminates duplicate MIME type strings and format-specific logic.
  */
-export function toArrayBuffer(bytesOrArtifact: any): ArrayBuffer {
-  if (bytesOrArtifact == null) return new ArrayBuffer(0);
-
-  // Unwrap { bytes: ... }
-  if (typeof bytesOrArtifact === 'object' && 'bytes' in bytesOrArtifact) {
-    return toArrayBuffer(bytesOrArtifact.bytes);
-  }
-
-  if (bytesOrArtifact instanceof ArrayBuffer) return bytesOrArtifact;
-  if (bytesOrArtifact instanceof Uint8Array) {
-    // Ensure we return a plain ArrayBuffer (not SharedArrayBuffer)
-    // Use slice() to create a copied Uint8Array backed by a new ArrayBuffer
-    const view = bytesOrArtifact.subarray(0).slice();
-    return view.buffer;
-  }
-  if (Array.isArray(bytesOrArtifact)) return new Uint8Array(bytesOrArtifact).buffer;
-
-  if (typeof bytesOrArtifact === 'string') {
-    // Try to detect base64
-    const compact = bytesOrArtifact.replace(/\s+/g, '');
-    const isBase64 = /^[A-Za-z0-9+/]+=*$/.test(compact) && compact.length % 4 === 0;
-    if (isBase64) {
-      const binary = atob(compact);
-      const out = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
-      return out.buffer;
-    }
-    return new TextEncoder().encode(bytesOrArtifact).buffer;
-  }
-
-  try {
-    const maybeArray = Array.from(bytesOrArtifact as any) as number[];
-    return new Uint8Array(maybeArray).buffer;
-  } catch (e) {
-    throw new Error('Unsupported artifact bytes type: ' + Object.prototype.toString.call(bytesOrArtifact));
-  }
+interface FormatConfig {
+  mimeType: string;
+  extension: string;
 }
 
+const FORMAT_CONFIG: Record<RenderFormat, FormatConfig> = {
+  pdf: {
+    mimeType: 'application/pdf',
+    extension: '.pdf'
+  },
+  svg: {
+    mimeType: 'image/svg+xml',
+    extension: '.svg'
+  }
+} as const;
+
 /**
- * Extract the first artifact from a render result
+ * Normalize legacy WASM output to standardized RenderResult format
+ *
+ * This function handles the 10+ different artifact formats that WASM might return
+ * and converts them to the standard { main: Uint8Array } format.
+ *
  * @internal
  */
-function extractArtifact(result: any): ArrayBuffer {
-  let artifactCandidate: any = result.artifacts;
-  if (Array.isArray(result.artifacts)) {
-    artifactCandidate = result.artifacts[0];
-  } else if (result.artifacts && typeof result.artifacts === 'object' && 'main' in result.artifacts) {
-    artifactCandidate = result.artifacts.main;
+function normalizeWasmResult(rawResult: any): RenderResult {
+  const outputFormat = rawResult.outputFormat || 'svg';
+
+  // Helper to convert any byte format to Uint8Array
+  const toUint8Array = (bytesOrArtifact: any): Uint8Array => {
+    if (bytesOrArtifact == null) return new Uint8Array(0);
+
+    // Unwrap { bytes: ... } wrapper objects
+    if (typeof bytesOrArtifact === 'object' && 'bytes' in bytesOrArtifact) {
+      return toUint8Array(bytesOrArtifact.bytes);
+    }
+
+    // Handle Uint8Array (already correct format)
+    if (bytesOrArtifact instanceof Uint8Array) {
+      return bytesOrArtifact;
+    }
+
+    // Handle ArrayBuffer
+    if (bytesOrArtifact instanceof ArrayBuffer) {
+      return new Uint8Array(bytesOrArtifact);
+    }
+
+    // Handle plain arrays
+    if (Array.isArray(bytesOrArtifact)) {
+      return new Uint8Array(bytesOrArtifact);
+    }
+
+    // Handle strings (with base64 detection)
+    if (typeof bytesOrArtifact === 'string') {
+      const compact = bytesOrArtifact.replace(/\s+/g, '');
+      const isBase64 = /^[A-Za-z0-9+/]+=*$/.test(compact) && compact.length % 4 === 0;
+      if (isBase64) {
+        const binary = atob(compact);
+        const out = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+        return out;
+      }
+      return new TextEncoder().encode(bytesOrArtifact);
+    }
+
+    // Handle iterables
+    try {
+      const maybeArray = Array.from(bytesOrArtifact as any) as number[];
+      return new Uint8Array(maybeArray);
+    } catch (e) {
+      throw new Error('Unsupported artifact bytes type: ' + Object.prototype.toString.call(bytesOrArtifact));
+    }
+  };
+
+  // Extract main artifact from various structural formats
+  let mainArtifact: Uint8Array;
+
+  if (Array.isArray(rawResult.artifacts)) {
+    // Array format: result.artifacts[0]
+    mainArtifact = toUint8Array(rawResult.artifacts[0]);
+  } else if (rawResult.artifacts && typeof rawResult.artifacts === 'object' && 'main' in rawResult.artifacts) {
+    // Object format: result.artifacts.main (already standardized!)
+    mainArtifact = toUint8Array(rawResult.artifacts.main);
+  } else if (rawResult.artifacts) {
+    // Direct format: result.artifacts
+    mainArtifact = toUint8Array(rawResult.artifacts);
+  } else {
+    mainArtifact = new Uint8Array(0);
   }
-  
-  return toArrayBuffer(artifactCandidate);
+
+  // Return standardized format
+  return {
+    artifacts: {
+      main: mainArtifact
+    },
+    outputFormat
+  };
 }
 
 /**
@@ -76,8 +125,8 @@ function extractArtifact(result: any): ArrayBuffer {
 function getPreferredPreviewFormat(
   engine: Quillmark,
   quillName?: string,
-  userFormat?: 'pdf' | 'svg' | 'txt'
-): 'pdf' | 'svg' | 'txt' {
+  userFormat?: RenderFormat
+): RenderFormat {
   // User explicitly specified a format
   if (userFormat) {
     return userFormat;
@@ -87,21 +136,19 @@ function getPreferredPreviewFormat(
   if (quillName) {
     try {
       const info: QuillInfo = engine.getQuillInfo(quillName);
+      // Prefer SVG, fall back to PDF
       if (info.supportedFormats.includes('svg')) {
         return 'svg';
       }
       if (info.supportedFormats.includes('pdf')) {
         return 'pdf';
       }
-      if (info.supportedFormats.includes('txt')) {
-        return 'txt';
-      }
     } catch (e) {
       // Quill not found or error getting info, fall through to default
     }
   }
 
-  // Default: prefer SVG, but if we can't determine, use SVG as a safe default
+  // Default: SVG
   return 'svg';
 }
 
@@ -141,49 +188,43 @@ export function render(
   // Parse markdown to get quill tag and fields
   const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);
   const quillName = options?.quillName || parsed.quillTag;
-  
+
   // Determine format (with smart default for preview)
   const format = options?.format || getPreferredPreviewFormat(engine, quillName);
-  
-  // Render using the WASM engine
-  const result: RenderResult = engine.render(parsed, { 
-    format, 
-    ...options 
+
+  // Render using the WASM engine (returns legacy format)
+  const rawResult: any = engine.render(parsed, {
+    format,
+    ...options
   });
-  
-  return result;
+
+  // Normalize to standard format - this is where the cascade happens!
+  // We handle all 10+ legacy formats here and convert to { main: Uint8Array }
+  return normalizeWasmResult(rawResult);
 }
 
 /**
  * Convert a render result to a Blob.
- * 
+ *
  * @param result - RenderResult from render()
  * @returns Blob containing the rendered output
- * 
+ *
  * @example
  * const result = render(engine, markdown, { format: 'pdf' });
  * const blob = toBlob(result);
  * const url = URL.createObjectURL(blob);
  */
 export function toBlob(result: RenderResult): Blob {
-  const bytes = extractArtifact(result);
-  const uint8 = new Uint8Array(bytes);
-  const format = result.outputFormat;
-  
-  // Determine MIME type
-  const mimeType = format === 'pdf' ? 'application/pdf' 
-    : format === 'svg' ? 'image/svg+xml'
-    : 'text/plain';
-  
-  return new Blob([uint8.slice()], { type: mimeType });
+  const config = FORMAT_CONFIG[result.outputFormat];
+  return new Blob([result.artifacts.main], { type: config.mimeType });
 }
 
 /**
  * Convert a render result to a data URL.
- * 
+ *
  * @param result - RenderResult from render()
  * @returns Promise resolving to data URL string
- * 
+ *
  * @example
  * const result = render(engine, markdown, { format: 'svg' });
  * const dataUrl = await toDataUrl(result);
@@ -216,18 +257,17 @@ export async function toDataUrl(result: RenderResult): Promise<string> {
 
 /**
  * Display a render result in a DOM element.
- * 
+ *
  * Intelligently handles different formats:
  * - SVG: Injects directly into element
  * - PDF: Creates an embed element
- * - TXT: Wraps in a pre element
- * 
+ *
  * Note: SVG content is rendered as-is. If the SVG source is untrusted,
  * consider sanitizing it before rendering to prevent XSS attacks.
- * 
+ *
  * @param result - RenderResult from render()
  * @param element - Target HTML element
- * 
+ *
  * @example
  * const result = render(engine, markdown, { format: 'svg' });
  * const preview = document.getElementById('preview');
@@ -237,45 +277,37 @@ export function toElement(
   result: RenderResult,
   element: HTMLElement
 ): void {
-  const bytes = extractArtifact(result);
-  const uint8 = new Uint8Array(bytes);
-  const format = result.outputFormat;
-  
+  const config = FORMAT_CONFIG[result.outputFormat];
+  const bytes = result.artifacts.main;
+
   // Clear existing content
   element.innerHTML = '';
-  
-  if (format === 'svg') {
+
+  if (result.outputFormat === 'svg') {
     // Inject SVG directly for best preview experience
     // Note: SVG is generated by the Quillmark engine (trusted source)
-    const svgText = new TextDecoder().decode(uint8);
-    element.innerHTML = svgText;
-  } else if (format === 'pdf') {
-    // Create blob URL and embed using DOM methods
-    const blob = new Blob([uint8.slice()], { type: 'application/pdf' });
+    element.innerHTML = new TextDecoder().decode(bytes);
+  } else {
+    // PDF: Create blob URL and embed
+    const blob = new Blob([bytes], { type: config.mimeType });
     const url = URL.createObjectURL(blob);
     const embed = document.createElement('embed');
     embed.src = url;
-    embed.type = 'application/pdf';
+    embed.type = config.mimeType;
     embed.width = '100%';
     embed.height = '600px';
     element.appendChild(embed);
-  } else {
-    // Text format - use textContent to avoid XSS
-    const text = new TextDecoder().decode(uint8);
-    const pre = document.createElement('pre');
-    pre.textContent = text;
-    element.appendChild(pre);
   }
 }
 
 /**
  * Download a render result as a file.
- * 
+ *
  * Triggers a browser download with the appropriate MIME type.
- * 
+ *
  * @param result - RenderResult from render()
  * @param filename - Name for the downloaded file
- * 
+ *
  * @example
  * const result = render(engine, markdown, { format: 'pdf' });
  * download(result, 'document.pdf');

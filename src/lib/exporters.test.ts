@@ -30,7 +30,7 @@ QUILL: test_quill
 describe('render', () => {
   describe('Unit tests (with mocks)', () => {
     // Mock Quillmark engine
-    const createMockEngine = (artifactBytes: Uint8Array, outputFormat: 'pdf' | 'svg' | 'txt' = 'pdf') => {
+    const createMockEngine = (artifactBytes: Uint8Array, outputFormat: 'pdf' | 'svg' = 'pdf') => {
       return {
         render: vi.fn(() => ({
           artifacts: [{
@@ -78,7 +78,7 @@ describe('toBlob', () => {
     it('should convert PDF result to blob', () => {
       const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]); // %PDF header
       const result = {
-        artifacts: [{ bytes: pdfBytes }],
+        artifacts: { main: pdfBytes },
         outputFormat: 'pdf' as const
       };
 
@@ -91,7 +91,7 @@ describe('toBlob', () => {
     it('should convert SVG result to blob', () => {
       const svgBytes = new TextEncoder().encode('<svg></svg>');
       const result = {
-        artifacts: [{ bytes: svgBytes }],
+        artifacts: { main: svgBytes },
         outputFormat: 'svg' as const
       };
 
@@ -101,15 +101,15 @@ describe('toBlob', () => {
       expect(blob.type).toBe('image/svg+xml');
     });
 
-    it('should handle array artifacts', () => {
+    it('should handle standardized format', () => {
       const bytes = new Uint8Array([1, 2, 3]);
       const result = {
-        artifacts: [{ bytes }],
+        artifacts: { main: bytes },
         outputFormat: 'pdf' as const
       };
 
       const blob = toBlob(result);
-      
+
       expect(blob).toBeInstanceOf(Blob);
     });
   });
@@ -120,7 +120,7 @@ describe('toDataUrl', () => {
     it('should convert result to data URL', async () => {
       const svgBytes = new TextEncoder().encode('<svg></svg>');
       const result = {
-        artifacts: [{ bytes: svgBytes }],
+        artifacts: { main: svgBytes },
         outputFormat: 'svg' as const
       };
 

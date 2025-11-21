@@ -45,6 +45,11 @@ export interface ParsedDocument {
 }
 
 /**
+ * Supported render formats
+ */
+export type RenderFormat = 'pdf' | 'svg';
+
+/**
  * Information about a registered Quill (returned by engine.getQuillInfo)
  */
 export interface QuillInfo {
@@ -53,11 +58,12 @@ export interface QuillInfo {
   metadata: Record<string, any>;
   example?: string;
   fieldSchemas: Record<string, any>;
-  supportedFormats: Array<'pdf' | 'svg' | 'txt'>;
+  supportedFormats: Array<RenderFormat>;
 }
 
 /**
  * Artifact from render result
+ * @deprecated Legacy format - use RenderResult.artifacts directly
  */
 export interface Artifact {
   bytes: Uint8Array;
@@ -65,18 +71,24 @@ export interface Artifact {
 }
 
 /**
- * Result from rendering
+ * Result from rendering (standardized format)
+ *
+ * This interface represents the standardized render result contract.
+ * All artifacts are Uint8Array values, with 'main' always present.
  */
 export interface RenderResult {
-  artifacts: Artifact[];
-  outputFormat: 'pdf' | 'svg' | 'txt';
+  artifacts: {
+    main: Uint8Array;
+    [key: string]: Uint8Array;
+  };
+  outputFormat: RenderFormat;
 }
 
 /**
  * Options for rendering
  */
 export interface RenderOptions {
-  format?: 'pdf' | 'svg' | 'txt';
+  format?: RenderFormat;
   assets?: Record<string, Uint8Array>;
   quillName?: string;  // Optional: overrides quillTag from ParsedDocument
 }
