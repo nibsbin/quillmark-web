@@ -1,7 +1,7 @@
 # Simplification Cascades - Quillmark Web
 
 > **Date:** 2025-11-21 (Updated)
-> **Status:** In Progress - 2 of 5 cascades completed
+> **Status:** In Progress - 3 of 5 cascades completed
 > **Impact:** High - These cascades could eliminate significant complexity
 
 ## Overview
@@ -164,9 +164,12 @@ Does it handle all cases?
 
 ## Cascade 3: Directory Loading Logic Duplication
 
+> **✅ COMPLETED** - 2025-11-21 (Commit: 1bf3edc)
+
 **Locations:**
-- `scripts/package-quills.js:27-44` - `readDirectoryRecursive()`
-- `src/lib/quillLoader.js:13-44` - `loadDirectory()`
+- `scripts/package-quills.js` - Was using inline directory reading
+- `src/lib/quillLoader.js` - Was using inline directory reading
+- `src/lib/fileSources.js` - New shared implementation
 
 ### The Variations
 
@@ -188,24 +191,29 @@ Two nearly identical functions that recursively traverse directories:
 
 ### The Abstraction
 
-**Insight:** "File tree construction is source-agnostic"
+**Insight:** "Separate file reading from tree building, share both"
 
-```typescript
-// Proposed abstraction
-interface FileSource {
-  list(): Promise<string[]>;
-  read(path: string): Promise<Uint8Array | string>;
-  isDirectory(path: string): Promise<boolean>;
+```javascript
+// Actual implementation in fileSources.js
+
+// Step 1: Read files into a Map (sync or async)
+function readDirectorySync(dirPath, fs, path): Map<string, Uint8Array> { ... }
+async function readDirectoryAsync(dirPath, fs, path): Promise<Map<string, Uint8Array>> { ... }
+
+// Step 2: Convert Map to desired tree format
+function buildFileTree(fileMap, options): Record<string, any> {
+  // Options: format (flat/nested), wrapContents, detectBinary, rawBuffers
+  // Single implementation that works for any file source
 }
 
-async function buildFileTree(source: FileSource, root: string): Promise<QuillFiles> {
-  // Single implementation that works for any source
-}
+// Usage examples
+// scripts/package-quills.js
+const fileMap = await readDirectoryAsync(quillDir, fs, path);
+const files = buildFileTree(fileMap, { format: 'flat', rawBuffers: true });
 
-// Implementations
-class FilesystemSource implements FileSource { ... }
-class ZipSource implements FileSource { ... }
-class NetworkSource implements FileSource { ... }
+// src/lib/quillLoader.js
+const fileMap = readDirectorySync(quillPath, fs, path);
+const files = buildFileTree(fileMap, { format: 'nested', wrapContents: true, detectBinary: true });
 ```
 
 ### The Test
@@ -229,14 +237,14 @@ Can all current sources use this?
 
 ## Cascade 4: Markdown File Extraction Duplication
 
-**Location:** `src/main.ts:78-87` and `106-118`
+**Location:** `src/main.ts:79-84` and `110-115`
 
 ### The Variations
 
 Identical logic repeated twice to find the main markdown file:
 
 ```typescript
-// First occurrence (lines 78-87)
+// First occurrence (lines 79-84)
 const initialName = initial.replace(/\.zip$/i, '');
 const candidateKeys = Object.keys(initialQuill.files || {});
 const preferred = `${initialName}.md`;
@@ -244,7 +252,7 @@ const mdKey = (initialQuill.files && initialQuill.files[preferred])
   ? preferred
   : candidateKeys.find((k: string) => k.toLowerCase().endsWith('.md'));
 
-// Second occurrence (lines 110-118) - EXACT SAME PATTERN
+// Second occurrence (lines 110-115) - EXACT SAME PATTERN
 const name = sel.replace(/\.zip$/i, '');
 const candidateKeys = Object.keys(quillJson.files || {});
 const preferred = `${name}.md`;
@@ -304,28 +312,37 @@ Does it handle all cases?
 
 ## Cascade 5: Format Configuration Duplication
 
+> **✅ PARTIALLY COMPLETED** - 2025-11-21
+
 **Locations:**
-- `src/lib/exporters.ts:174-176` in `toBlob()`
-- `src/lib/exporters.ts:247-268` in `toElement()`
+- `src/lib/exporters.ts:217-219` - `toBlob()` uses FORMAT_CONFIG
+- `src/lib/exporters.ts:276-301` - `toElement()` uses FORMAT_CONFIG but rendering logic not fully abstracted
 
 ### The Variations
 
-Format-to-MIME type mapping repeated in multiple places:
+Format-to-MIME type mapping was repeated in multiple places. This has been partially addressed:
 
+**✅ Completed:**
 ```typescript
-// In toBlob()
-const mimeType = format === 'pdf' ? 'application/pdf'
-  : format === 'svg' ? 'image/svg+xml'
-  : 'text/plain';
+// FORMAT_CONFIG now centralizes MIME types and extensions
+const FORMAT_CONFIG: Record<RenderFormat, FormatConfig> = {
+  pdf: { mimeType: 'application/pdf', extension: '.pdf' },
+  svg: { mimeType: 'image/svg+xml', extension: '.svg' }
+};
 
-// In toElement() - different handling per format
-if (format === 'svg') {
-  container.innerHTML = new TextDecoder().decode(bytes);
-} else if (format === 'pdf') {
-  const blob = new Blob([bytes], { type: 'application/pdf' });
-  iframe.src = URL.createObjectURL(blob);
+// toBlob() uses config
+const config = FORMAT_CONFIG[result.outputFormat];
+return new Blob([result.artifacts.main], { type: config.mimeType });
+```
+
+**❌ Not yet abstracted:**
+```typescript
+// In toElement() - rendering logic still inline
+if (result.outputFormat === 'svg') {
+  element.innerHTML = new TextDecoder().decode(bytes);
 } else {
-  pre.textContent = new TextDecoder().decode(bytes);
+  const blob = new Blob([bytes], { type: config.mimeType });
+  // ... iframe creation
 }
 ```
 
@@ -387,12 +404,16 @@ Does it cover all formats?
 
 ### The Cascade
 
-**Eliminates:**
-- 3 inline ternary chains
-- 2 if/else branches
-- Repeated MIME type strings
+**Already Eliminated:**
+- ✅ Repeated MIME type strings (now in FORMAT_CONFIG)
+- ✅ Inline extension mapping (now in FORMAT_CONFIG)
 
-**Impact:** Centralized format configuration, easier to extend
+**Remaining to Eliminate:**
+- ❌ Rendering logic still has if/else branches in toElement()
+- ❌ Could add render() method to FormatConfig as proposed
+
+**Current Impact:** MIME types and extensions centralized, partial improvement
+**Full Impact:** Would eliminate all format-specific branching, making new formats trivial to add
 
 ---
 
@@ -402,17 +423,17 @@ Does it cover all formats?
 |---------|--------|--------|----------|--------|------------|
 | 1. Artifact Type Juggling | 🔥 High | Medium | **P0** | ✅ Complete | 10+ cases, 60 lines |
 | 2. Binary Detection | Medium | Low | **P1** | ✅ Complete | 1 impl, divergence risk |
-| 3. Directory Loading | Medium | Medium | **P2** | Pending | 2 impls, 40 lines |
+| 3. Directory Loading | Medium | Medium | **P2** | ✅ Complete | 2 impls, 40 lines |
 | 4. Markdown Extraction | Low | Low | **P2** | Pending | 1 impl, 9 lines |
-| 5. Format Configuration | Medium | Low | **P1** | Pending | Repeated mappings |
+| 5. Format Configuration | Medium | Low | **P1** | 🔄 Partial | MIME/ext centralized, render logic remains |
 
 ### Recommended Order
 
 1. **✅ P0 - Artifact Type Juggling:** Completed - Standardized RenderResult type eliminates 10+ type conversion paths
 2. **✅ P1 - Binary Detection:** Completed - Single source of truth for binary file detection
-3. **P1 - Format Configuration:** Quick win, cleaner architecture
-4. **P2 - Markdown Extraction:** Minor improvement, low risk
-5. **P2 - Directory Loading:** Good refactor, but requires careful testing
+3. **✅ P2 - Directory Loading:** Completed - Unified file tree construction via fileSources.js
+4. **🔄 P1 - Format Configuration:** Partially complete - MIME/extension mapping centralized, render abstraction remains
+5. **P2 - Markdown Extraction:** Minor improvement, low risk, quick implementation
 
 ### Additional Cascades (Medium Priority)
 
@@ -426,11 +447,12 @@ Does it cover all formats?
 
 1. ✅ ~~Review and validate these findings with the team~~
 2. ✅ ~~Create issues for P0 and P1 cascades~~
-3. ✅ ~~For Cascade 1, coordinate with WASM team on standardizing `RenderResult`~~
-4. ✅ ~~Implement Binary Detection (Cascade 2)~~
-5. **Current:** Implement remaining P1 quick win (Format Configuration - Cascade 5)
-6. Continue with P2 cascades (Markdown Extraction, Directory Loading)
-7. Measure cumulative impact of completed cascades
+3. ✅ ~~Implement Cascade 1: Artifact Type Juggling~~
+4. ✅ ~~Implement Cascade 2: Binary Detection~~
+5. ✅ ~~Implement Cascade 3: Directory Loading~~
+6. **Current:** Complete Cascade 5: Add render() method to FORMAT_CONFIG to eliminate remaining if/else
+7. Implement Cascade 4: Markdown Extraction (quick win)
+8. Measure cumulative impact of completed cascades
 
 ---
 
@@ -477,15 +499,73 @@ Does it cover all formats?
 - `src/lib/utils.ts` - Exported BINARY_EXTENSIONS constant
 - `src/lib/quillLoader.js` - Removed inline regex, imported shared function
 
+### Cascade 3: Directory Loading Logic Duplication (Completed 2025-11-21)
+
+**Commit:** 1bf3edc - "Implement Cascade 3: Eliminate directory loading logic duplication (#36)"
+
+**Changes Made:**
+- Created `src/lib/fileSources.js` with unified file loading utilities:
+  - `readDirectoryAsync()` - async recursive directory reader
+  - `readDirectorySync()` - sync recursive directory reader
+  - `buildFileTree()` - converts flat file map to nested or flat tree structure
+- Updated `scripts/package-quills.js` to use shared `readDirectoryAsync()` and `buildFileTree()`
+- Updated `src/lib/quillLoader.js` to use shared `readDirectorySync()` and `buildFileTree()`
+- Eliminated ~40 lines of duplicate recursive traversal logic
+
+**Impact:**
+- Eliminated 2 duplicate directory traversal implementations
+- Single source of truth for file tree construction
+- Flexible output formats (nested/flat, with/without binary detection)
+- Easier to add new file sources (network, in-memory, etc.)
+- Improved maintainability and testability
+
+**Files Modified:**
+- `src/lib/fileSources.js` - New shared utilities module
+- `scripts/package-quills.js` - Now imports shared functions
+- `src/lib/quillLoader.js` - Now imports shared functions
+
+### Cascade 5: Format Configuration Duplication (Partially Completed 2025-11-21)
+
+**Status:** MIME type and extension mapping centralized, rendering logic not yet abstracted
+
+**Changes Made:**
+- Created `FORMAT_CONFIG` constant in `src/lib/exporters.ts` (lines 28-37)
+- Centralized MIME type mapping: `application/pdf`, `image/svg+xml`
+- Centralized file extension mapping: `.pdf`, `.svg`
+- `toBlob()` function now uses `FORMAT_CONFIG` to get MIME type
+- `toElement()` function uses `FORMAT_CONFIG` but rendering logic still has if/else branches
+
+**Completed:**
+- ✅ Eliminated repeated MIME type strings across functions
+- ✅ Eliminated repeated extension strings across functions
+- ✅ Single source of truth for format metadata
+
+**Remaining Work:**
+- ❌ Add `render()` method to `FormatConfig` interface
+- ❌ Move rendering logic from `toElement()` into FORMAT_CONFIG
+- ❌ Would eliminate remaining if/else branches for format-specific rendering
+
+**Impact:**
+- Partial improvement to maintainability and extensibility
+- Adding new formats still requires modifying if/else logic in `toElement()`
+- Full implementation would make new formats trivial (just add to config object)
+
+**Files Modified:**
+- `src/lib/exporters.ts` - Added FORMAT_CONFIG, updated toBlob() and toElement()
+
 ---
 
 ## Architectural Insight
 
-The codebase recently completed a successful API redesign (see `prose/designs/api-redesign.md`) which simplified the **external API**. With Cascades 1 and 2 complete, artifact handling is standardized and binary detection is unified. Remaining complexity stems from:
+The codebase recently completed a successful API redesign (see `prose/designs/api-redesign.md`) which simplified the **external API**. With Cascades 1, 2, and 3 complete, the internal implementation quality is catching up to the clean external API. Resolved complexity:
 
 - ✅ ~~Supporting multiple artifact formats (WASM evolution)~~ - **Resolved by Cascade 1**
 - ✅ ~~Duplicate binary detection implementations~~ - **Resolved by Cascade 2**
-- Duplicate utilities across scripts and lib code (Cascades 3, 4)
+- ✅ ~~Duplicate directory traversal and file tree construction~~ - **Resolved by Cascade 3**
+
+Remaining opportunities:
+- Duplicate markdown file extraction logic (Cascade 4) - Low priority, quick fix
+- Rendering logic abstraction (Cascade 5) - Partially complete, render method remains
 - Node.js vs Browser dual-targeting (unclear requirement)
 
-**Key Learning:** External API simplicity doesn't guarantee internal simplicity. These cascades represent opportunities to bring the implementation quality up to match the clean API design. Cascades 1 and 2 demonstrate the value of this approach - standardizing contracts and eliminating duplication reduces complexity and maintenance burden while improving code reliability.
+**Key Learning:** External API simplicity doesn't guarantee internal simplicity. These cascades represent opportunities to bring the implementation quality up to match the clean API design. Cascades 1-3 demonstrate the value of this approach - standardizing contracts, eliminating duplication, and sharing utilities reduces complexity and maintenance burden while improving code reliability and making future enhancements easier.
