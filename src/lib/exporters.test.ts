@@ -18,7 +18,7 @@ vi.mock('@quillmark-test/wasm', () => ({
   }
 }));
 
-import { render, toBlob, toDataUrl, toElement } from './exporters';
+import { render, toSvg, toBlob, toDataUrl, toElement } from './exporters';
 
 const TEST_MARKDOWN = `---
 title: Test Document
@@ -69,6 +69,58 @@ describe('render', () => {
       const result = render(engine, TEST_MARKDOWN);
 
       expect(result).toBeDefined();
+    });
+  });
+});
+
+describe('toSvg', () => {
+  describe('Unit tests (with mocks)', () => {
+    it('should convert SVG result to string', () => {
+      const svgContent = '<svg width="100" height="100"><circle cx="50" cy="50" r="40"/></svg>';
+      const svgBytes = new TextEncoder().encode(svgContent);
+      const result = {
+        artifacts: { main: svgBytes },
+        outputFormat: 'svg' as const
+      };
+
+      const svgString = toSvg(result);
+
+      expect(svgString).toBe(svgContent);
+    });
+
+    it('should throw error for non-SVG format', () => {
+      const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]);
+      const result = {
+        artifacts: { main: pdfBytes },
+        outputFormat: 'pdf' as const
+      };
+
+      expect(() => toSvg(result)).toThrow('toSvg() requires SVG format, got: pdf');
+    });
+
+    it('should handle empty SVG', () => {
+      const svgBytes = new TextEncoder().encode('');
+      const result = {
+        artifacts: { main: svgBytes },
+        outputFormat: 'svg' as const
+      };
+
+      const svgString = toSvg(result);
+
+      expect(svgString).toBe('');
+    });
+
+    it('should handle SVG with unicode characters', () => {
+      const svgContent = '<svg><text>Hello 世界 🌍</text></svg>';
+      const svgBytes = new TextEncoder().encode(svgContent);
+      const result = {
+        artifacts: { main: svgBytes },
+        outputFormat: 'svg' as const
+      };
+
+      const svgString = toSvg(result);
+
+      expect(svgString).toBe(svgContent);
     });
   });
 });

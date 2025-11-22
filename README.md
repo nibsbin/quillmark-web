@@ -31,7 +31,7 @@ const result = exporters.render(engine, markdown, { format: 'pdf' });
 exporters.download(result, 'output.pdf');
 ```
 
-### Live SVG Preview
+### Get SVG String (Primary Use Case)
 
 ```typescript
 import { Quillmark, loaders, exporters } from '@quillmark-test/web';
@@ -41,13 +41,25 @@ const quill = await loaders.fromZip(await fetch('/templates/letter.zip').then(r 
 const engine = new Quillmark();
 engine.registerQuill(quill);
 
-// Real-time preview
+// Get SVG string to inject into your own widgets/components
+const result = exporters.render(engine, markdown);  // Defaults to SVG
+const svgString = exporters.toSvg(result);
+
+// Use in your application
+myCustomWidget.innerHTML = svgString;
+document.getElementById('preview').innerHTML = svgString;
+```
+
+### Live Preview with toElement()
+
+```typescript
+// Alternative: Use toElement() for quick demos/playgrounds
 const editor = document.querySelector('#editor');
 const preview = document.querySelector('#preview');
 
 editor.addEventListener('input', () => {
-  const result = exporters.render(engine, editor.value);  // Auto-detects SVG
-  exporters.toElement(result, preview);
+  const result = exporters.render(engine, editor.value);
+  exporters.toElement(result, preview);  // Handles SVG/PDF automatically
 });
 ```
 
@@ -86,17 +98,21 @@ const result = exporters.render(engine, markdown, {
 All export functions accept `RenderResult` from `render()`:
 
 ```typescript
-// Download as file
-exporters.download(result, 'document.pdf');
+// Get SVG string (primary use case for SVG output)
+const svgString = exporters.toSvg(result);  // Throws if not SVG format
+myWidget.innerHTML = svgString;
 
-// Get Blob (for upload, etc.)
+// Get Blob (for upload, storage, etc.)
 const blob = exporters.toBlob(result);
 
 // Get data URL
 const dataUrl = await exporters.toDataUrl(result);
 
-// Inject into DOM element
+// Inject into DOM element (convenience for demos)
 exporters.toElement(result, containerElement);
+
+// Download as file
+exporters.download(result, 'document.pdf');
 ```
 
 ## Pattern: Render Once, Export Many
