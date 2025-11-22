@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the WASM module before importing exporters
 vi.mock('@quillmark-test/wasm', () => ({
@@ -18,7 +18,7 @@ vi.mock('@quillmark-test/wasm', () => ({
   }
 }));
 
-import { render, toBlob, toDataUrl } from './exporters';
+import { render, toBlob, toDataUrl, toElement } from './exporters';
 
 const TEST_MARKDOWN = `---
 title: Test Document
@@ -127,6 +127,79 @@ describe('toDataUrl', () => {
       const dataUrl = await toDataUrl(result);
 
       expect(dataUrl).toMatch(/^data:image\/svg\+xml;base64,/);
+    });
+  });
+});
+
+describe('toElement', () => {
+  describe('Unit tests (with mocks)', () => {
+    let mockElement: HTMLElement;
+
+    beforeEach(() => {
+      // Create a mock HTML element for each test
+      mockElement = document.createElement('div');
+    });
+
+    it('should render SVG content directly into element', () => {
+      const svgContent = '<svg width="100" height="100"><circle cx="50" cy="50" r="40"></circle></svg>';
+      const svgBytes = new TextEncoder().encode(svgContent);
+      const result = {
+        artifacts: { main: svgBytes },
+        outputFormat: 'svg' as const
+      };
+
+      toElement(result, mockElement);
+
+      // Verify SVG was rendered (DOM may normalize the markup)
+      expect(mockElement.innerHTML).toContain('<svg');
+      expect(mockElement.innerHTML).toContain('circle');
+      expect(mockElement.innerHTML).toContain('cx="50"');
+    });
+
+    it('should render PDF content in an embed element', () => {
+      const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]); // %PDF header
+      const result = {
+        artifacts: { main: pdfBytes },
+        outputFormat: 'pdf' as const
+      };
+
+      // Mock URL.createObjectURL since it's not available in test environment
+      const mockUrl = 'blob:mock-url';
+      global.URL.createObjectURL = vi.fn(() => mockUrl);
+
+      toElement(result, mockElement);
+
+      const embed = mockElement.querySelector('embed');
+      expect(embed).toBeTruthy();
+      expect(embed?.type).toBe('application/pdf');
+      expect(embed?.width).toBe('100%');
+      expect(embed?.height).toBe('600px');
+    });
+
+    it('should clear existing content before rendering', () => {
+      mockElement.innerHTML = '<p>Existing content</p>';
+      const svgBytes = new TextEncoder().encode('<svg></svg>');
+      const result = {
+        artifacts: { main: svgBytes },
+        outputFormat: 'svg' as const
+      };
+
+      toElement(result, mockElement);
+
+      expect(mockElement.innerHTML).toBe('<svg></svg>');
+      expect(mockElement.innerHTML).not.toContain('Existing content');
+    });
+
+    it('should handle empty SVG content', () => {
+      const svgBytes = new TextEncoder().encode('');
+      const result = {
+        artifacts: { main: svgBytes },
+        outputFormat: 'svg' as const
+      };
+
+      toElement(result, mockElement);
+
+      expect(mockElement.innerHTML).toBe('');
     });
   });
 });
