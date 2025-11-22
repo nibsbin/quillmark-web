@@ -43,7 +43,7 @@ engine.registerQuill(quill);
 
 // Get SVG string to inject into your own widgets/components
 const result = exporters.render(engine, markdown);  // Defaults to SVG
-const svgString = exporters.toSvg(result);
+const svgString = new TextDecoder().decode(result.artifacts.main);
 
 // Use in your application
 myCustomWidget.innerHTML = svgString;
@@ -98,8 +98,8 @@ const result = exporters.render(engine, markdown, {
 All export functions accept `RenderResult` from `render()`:
 
 ```typescript
-// Get SVG string (primary use case for SVG output)
-const svgString = exporters.toSvg(result);  // Throws if not SVG format
+// Get SVG string (primary use case - direct access)
+const svgString = new TextDecoder().decode(result.artifacts.main);
 myWidget.innerHTML = svgString;
 
 // Get Blob (for upload, storage, etc.)

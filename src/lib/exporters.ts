@@ -221,28 +221,6 @@ export function render(
 }
 
 /**
- * Convert a render result to an SVG string.
- *
- * This is the primary use case for SVG output - getting the string content
- * to inject into your own widgets, components, or applications.
- *
- * @param result - RenderResult from render() (must be SVG format)
- * @returns Decoded SVG string
- * @throws Error if result is not SVG format
- *
- * @example
- * const result = render(engine, markdown, { format: 'svg' });
- * const svgString = toSvg(result);
- * myCustomWidget.innerHTML = svgString;
- */
-export function toSvg(result: RenderResult): string {
-  if (result.outputFormat !== 'svg') {
-    throw new Error(`toSvg() requires SVG format, got: ${result.outputFormat}`);
-  }
-  return new TextDecoder().decode(result.artifacts.main);
-}
-
-/**
  * Convert a render result to a Blob.
  *
  * @param result - RenderResult from render()

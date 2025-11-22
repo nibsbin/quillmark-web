@@ -8,7 +8,6 @@
 
 import {
   render as render_,
-  toSvg as toSvg_,
   toBlob as toBlob_,
   toDataUrl as toDataUrl_,
   toElement as toElement_,
@@ -41,7 +40,6 @@ export const loaders = {
 
 export const exporters = {
   render: render_,
-  toSvg: toSvg_,
   toBlob: toBlob_,
   toDataUrl: toDataUrl_,
   toElement: toElement_,
