@@ -12,7 +12,11 @@ export default defineConfig({
     environment: 'happy-dom',
     include: ['src/**/*.{test,spec}.{js,ts}'],
     deps: {
-      inline: ['@quillmark-test/wasm']
+      optimizer: {
+        web: {
+          include: ['@quillmark-test/wasm']
+        }
+      }
     },
     coverage: {
       provider: 'v8',
