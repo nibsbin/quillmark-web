@@ -42,11 +42,12 @@ Thank you for your interest in contributing to Quillmark Web! This document prov
 - **`src/lib/`** - The `@quillmark-test/web` library
   - `index.ts` - Main library exports
   - `loaders.ts` - Quill loading utilities (`fromZip`)
-  - `renderers.ts` - Rendering helpers
+  - `exporters.ts` - Rendering and export helpers
   - `utils.ts` - Utility functions
   - `types.ts` - TypeScript type definitions
 - **`public/quills/`** - Quill template zip files for testing
-- **`designs/`** - Design documents and specifications
+- **`prose/designs/`** - Design documents and specifications
+- **`prose/plans/`** - Implementation plans
 - **`index.html`** - Playground HTML template
 
 ## Code Style
@@ -103,7 +104,7 @@ When modifying the playground:
 
 If your changes affect the design:
 
-1. Update relevant files in `designs/`
+1. Update relevant files in `prose/designs/`
 2. Keep design docs in sync with implementation
 3. Document architectural decisions
 
@@ -177,7 +178,7 @@ Add fromZip validation for missing Quill.toml
 
 **Note:** Only maintainers with repository push access can create releases. Publishing to NPM is automated via GitHub Actions.
 
-The project uses an automated versioning workflow (see `designs/VERSIONING.MD`) that handles version bumping, git tagging, and pushing. A GitHub Action then detects the tag and publishes to NPM using credentials from the Publish environment.
+The project uses an automated versioning workflow that handles version bumping, git tagging, and pushing. A GitHub Action then detects the tag and publishes to NPM using credentials from the Publish environment.
 
 ### Release Commands
 
@@ -257,7 +258,7 @@ When contributing, keep these principles in mind:
 If you have questions about contributing:
 
 - Open a GitHub Issue with the "question" label
-- Review the design documents in `designs/`
+- Review the design documents in `prose/designs/` and `prose/plans/`
 - Check existing code for examples
 
 ## License

@@ -195,7 +195,7 @@ The zip file must contain `Quill.toml` at the root level.
 
 ## Testing
 
-This library follows the validated testing patterns from `quillmark-wasm` end-to-end tests. See [TESTING_DIFFERENCES.md](/docs/TESTING_DIFFERENCES.md) for a detailed comparison of testing approaches.
+This library follows the validated testing patterns from `quillmark-wasm` end-to-end tests.
 
 ### Test Structure
 
