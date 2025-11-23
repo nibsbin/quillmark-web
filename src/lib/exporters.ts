@@ -299,7 +299,7 @@ export async function toDataUrl(result: RenderResult): Promise<string> {
  * - SVG: Injects directly into element
  * - PDF: Creates an embed element
  *
- * For multi-page results, only the first page/artifact is displayed.
+ * For multi-page results (arrays), renders all pages vertically in a scrollable container.
  *
  * Note: SVG content is rendered as-is. If the SVG source is untrusted,
  * consider sanitizing it before rendering to prevent XSS attacks.
@@ -321,13 +321,37 @@ export function toElement(
   // Clear existing content
   element.innerHTML = '';
 
-  // Get first artifact
-  const bytes = Array.isArray(result.artifacts)
-    ? result.artifacts[0]
-    : (result.artifacts instanceof Uint8Array ? result.artifacts : result.artifacts.main);
+  if (Array.isArray(result.artifacts)) {
+    // Multiple pages - render all in separate containers, stacked vertically
+    result.artifacts.forEach((artifact, index) => {
+      const pageContainer = document.createElement('div');
+      pageContainer.className = 'page';
+      pageContainer.style.marginBottom = '20px';
+      pageContainer.style.borderBottom = '1px solid #e0e0e0';
+      pageContainer.style.paddingBottom = '20px';
+      pageContainer.style.clear = 'both';
 
-  // Use format-specific render function (Cascade 5 pattern)
-  config.render(bytes, element);
+      // Add page number
+      const pageLabel = document.createElement('div');
+      pageLabel.textContent = `Page ${index + 1}`;
+      pageLabel.style.fontSize = '12px';
+      pageLabel.style.color = '#757575';
+      pageLabel.style.marginBottom = '10px';
+      pageContainer.appendChild(pageLabel);
+
+      const contentContainer = document.createElement('div');
+      config.render(artifact, contentContainer);
+
+      pageContainer.appendChild(contentContainer);
+      element.appendChild(pageContainer);
+    });
+  } else {
+    // Single page (Uint8Array or object with named artifacts)
+    const bytes = result.artifacts instanceof Uint8Array
+      ? result.artifacts
+      : result.artifacts.main;
+    config.render(bytes, element);
+  }
 }
 
 /**
