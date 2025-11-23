@@ -134,6 +134,37 @@ async function init() {
       showStatus(`Download failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
   });
+
+  // Demo: Export SVG pages programmatically
+  // This function demonstrates the multi-page SVG export API
+  function exportSvgPages(): string | string[] | Record<string, string> {
+    if (!markdownInput) throw new Error('Markdown input not available');
+    const result = exporters.render(engine, markdownInput.value, { format: 'svg' });
+    return exporters.toString(result);
+  }
+
+  // Make API available globally for console usage
+  (window as any).quillmark = {
+    engine,
+    exporters,
+    exportSvgPages,
+    // Example: Get SVG as string(s) for programmatic use
+    getSvg: () => {
+      if (!markdownInput) throw new Error('Markdown input not available');
+      const result = exporters.render(engine, markdownInput.value, { format: 'svg' });
+      const svg = exporters.toString(result);
+
+      if (Array.isArray(svg)) {
+        console.log(`Rendered ${svg.length} SVG pages`);
+      } else if (typeof svg === 'object') {
+        console.log(`Rendered SVG with artifacts: ${Object.keys(svg).join(', ')}`);
+      } else {
+        console.log('Rendered single SVG page');
+      }
+
+      return svg;
+    }
+  };
 }
 
 init().catch(console.error);

@@ -32,7 +32,7 @@ const FORMAT_CONFIG: Record<RenderFormat, FormatConfig> = {
     extension: '.pdf',
     render: (bytes: Uint8Array, element: HTMLElement) => {
       // Create blob URL and embed for PDF viewing
-      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const embed = document.createElement('embed');
       embed.src = url;
@@ -253,7 +253,7 @@ export function toBlob(result: RenderResult): Blob {
   const bytes = Array.isArray(result.artifacts)
     ? result.artifacts[0]
     : (result.artifacts instanceof Uint8Array ? result.artifacts : result.artifacts.main);
-  return new Blob([bytes], { type: config.mimeType });
+  return new Blob([bytes as BlobPart], { type: config.mimeType });
 }
 
 /**
