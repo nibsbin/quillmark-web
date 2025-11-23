@@ -11,7 +11,8 @@ import {
   toBlob as toBlob_,
   toDataUrl as toDataUrl_,
   toElement as toElement_,
-  download as download_
+  download as download_,
+  toString as toString_
 } from './exporters';
 import { fromZip as _fromZip } from './loaders';
 import { detectBinaryFile, debounce } from './utils';
@@ -42,6 +43,7 @@ export const exporters = {
   render: render_,
   toBlob: toBlob_,
   toDataUrl: toDataUrl_,
+  toString: toString_,
   toElement: toElement_,
   download: download_
 };

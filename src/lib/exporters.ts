@@ -110,27 +110,37 @@ function normalizeWasmResult(rawResult: any): RenderResult {
     }
   };
 
-  // Extract main artifact from various structural formats
-  let mainArtifact: Uint8Array;
+  // Extract artifacts from various structural formats
+  const artifacts: Record<string, Uint8Array> = {};
 
   if (Array.isArray(rawResult.artifacts)) {
-    // Array format: result.artifacts[0]
-    mainArtifact = toUint8Array(rawResult.artifacts[0]);
+    // Array format: result.artifacts[0], artifacts[1], etc.
+    // Store first as 'main', rest as indexed keys
+    if (rawResult.artifacts.length > 0) {
+      artifacts.main = toUint8Array(rawResult.artifacts[0]);
+      // Preserve additional artifacts with numeric keys
+      for (let i = 1; i < rawResult.artifacts.length; i++) {
+        artifacts[`page-${i}`] = toUint8Array(rawResult.artifacts[i]);
+      }
+    } else {
+      artifacts.main = new Uint8Array(0);
+    }
   } else if (rawResult.artifacts && typeof rawResult.artifacts === 'object' && 'main' in rawResult.artifacts) {
     // Object format: result.artifacts.main (already standardized!)
-    mainArtifact = toUint8Array(rawResult.artifacts.main);
+    // Preserve all keys from the object
+    for (const [key, value] of Object.entries(rawResult.artifacts)) {
+      artifacts[key] = toUint8Array(value);
+    }
   } else if (rawResult.artifacts) {
     // Direct format: result.artifacts
-    mainArtifact = toUint8Array(rawResult.artifacts);
+    artifacts.main = toUint8Array(rawResult.artifacts);
   } else {
-    mainArtifact = new Uint8Array(0);
+    artifacts.main = new Uint8Array(0);
   }
 
   // Return standardized format
   return {
-    artifacts: {
-      main: mainArtifact
-    },
+    artifacts,
     outputFormat
   };
 }
@@ -320,7 +330,7 @@ export function download(
   filename: string
 ): void {
   const blob = toBlob(result);
-  
+
   // Trigger browser download
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -330,6 +340,53 @@ export function download(
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), BLOB_URL_REVOKE_DELAY);
+}
+
+/**
+ * Convert render result artifacts to strings.
+ *
+ * Decodes artifact(s) to UTF-8 strings. This is particularly useful for SVG output.
+ *
+ * - Single artifact: Returns the string directly
+ * - Multiple artifacts: Returns an array of strings (main first, then sorted by key)
+ *
+ * @param result - RenderResult from render()
+ * @returns String or array of strings depending on number of artifacts
+ *
+ * @example
+ * // Single page
+ * const result = render(engine, markdown, { format: 'svg' });
+ * const svg = toString(result);
+ * // svg is '<svg>...</svg>'
+ *
+ * @example
+ * // Multiple pages
+ * const result = render(engine, longMarkdown, { format: 'svg' });
+ * const pages = toString(result);
+ * // pages is ['<svg>main</svg>', '<svg>page-1</svg>', '<svg>page-2</svg>']
+ *
+ * @example
+ * // Send to server
+ * const result = render(engine, markdown, { format: 'svg' });
+ * const data = toString(result);
+ * await fetch('/api/save', {
+ *   method: 'POST',
+ *   body: JSON.stringify(Array.isArray(data) ? { pages: data } : { svg: data })
+ * });
+ */
+export function toString(result: RenderResult): string | string[] {
+  const keys = Object.keys(result.artifacts);
+
+  // Single artifact - return string directly
+  if (keys.length === 1) {
+    return new TextDecoder().decode(result.artifacts.main);
+  }
+
+  // Multiple artifacts - return array
+  const sortedKeys = ['main', ...keys.filter(k => k !== 'main').sort()];
+  return sortedKeys
+    .filter(key => result.artifacts[key])
+    .map(key => new TextDecoder().decode(result.artifacts[key]));
 }
 
 
