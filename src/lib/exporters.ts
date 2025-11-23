@@ -110,32 +110,37 @@ function normalizeWasmResult(rawResult: any): RenderResult {
     }
   };
 
-  // Extract artifacts from various structural formats
-  const artifacts: Record<string, Uint8Array> = {};
+  // Extract artifacts - preserve the natural structure from WASM
+  let artifacts: Uint8Array | Uint8Array[] | Record<string, Uint8Array>;
 
   if (Array.isArray(rawResult.artifacts)) {
-    // Array format: result.artifacts[0], artifacts[1], etc.
-    // Store first as 'main', rest as indexed keys
-    if (rawResult.artifacts.length > 0) {
-      artifacts.main = toUint8Array(rawResult.artifacts[0]);
-      // Preserve additional artifacts with numeric keys
-      for (let i = 1; i < rawResult.artifacts.length; i++) {
-        artifacts[`page-${i}`] = toUint8Array(rawResult.artifacts[i]);
-      }
+    // Array format: multiple pages/artifacts
+    if (rawResult.artifacts.length === 0) {
+      artifacts = new Uint8Array(0);
+    } else if (rawResult.artifacts.length === 1) {
+      artifacts = toUint8Array(rawResult.artifacts[0]);
     } else {
-      artifacts.main = new Uint8Array(0);
+      artifacts = rawResult.artifacts.map(toUint8Array);
     }
-  } else if (rawResult.artifacts && typeof rawResult.artifacts === 'object' && 'main' in rawResult.artifacts) {
-    // Object format: result.artifacts.main (already standardized!)
+  } else if (rawResult.artifacts && typeof rawResult.artifacts === 'object') {
+    // Object format: named artifacts (e.g., { main: ..., header: ... })
     // Preserve all keys from the object
+    const obj: Record<string, Uint8Array> = {};
     for (const [key, value] of Object.entries(rawResult.artifacts)) {
-      artifacts[key] = toUint8Array(value);
+      obj[key] = toUint8Array(value);
+    }
+    // If it's a single 'main' artifact, unwrap it
+    const keys = Object.keys(obj);
+    if (keys.length === 1 && keys[0] === 'main') {
+      artifacts = obj.main;
+    } else {
+      artifacts = obj;
     }
   } else if (rawResult.artifacts) {
-    // Direct format: result.artifacts
-    artifacts.main = toUint8Array(rawResult.artifacts);
+    // Direct format: single artifact
+    artifacts = toUint8Array(rawResult.artifacts);
   } else {
-    artifacts.main = new Uint8Array(0);
+    artifacts = new Uint8Array(0);
   }
 
   // Return standardized format
@@ -233,6 +238,8 @@ export function render(
 /**
  * Convert a render result to a Blob.
  *
+ * For multi-page results, only the first page/artifact is converted.
+ *
  * @param result - RenderResult from render()
  * @returns Blob containing the rendered output
  *
@@ -243,7 +250,10 @@ export function render(
  */
 export function toBlob(result: RenderResult): Blob {
   const config = FORMAT_CONFIG[result.outputFormat];
-  return new Blob([result.artifacts.main], { type: config.mimeType });
+  const bytes = Array.isArray(result.artifacts)
+    ? result.artifacts[0]
+    : (result.artifacts instanceof Uint8Array ? result.artifacts : result.artifacts.main);
+  return new Blob([bytes], { type: config.mimeType });
 }
 
 /**
@@ -289,6 +299,8 @@ export async function toDataUrl(result: RenderResult): Promise<string> {
  * - SVG: Injects directly into element
  * - PDF: Creates an embed element
  *
+ * For multi-page results, only the first page/artifact is displayed.
+ *
  * Note: SVG content is rendered as-is. If the SVG source is untrusted,
  * consider sanitizing it before rendering to prevent XSS attacks.
  *
@@ -309,8 +321,13 @@ export function toElement(
   // Clear existing content
   element.innerHTML = '';
 
+  // Get first artifact
+  const bytes = Array.isArray(result.artifacts)
+    ? result.artifacts[0]
+    : (result.artifacts instanceof Uint8Array ? result.artifacts : result.artifacts.main);
+
   // Use format-specific render function (Cascade 5 pattern)
-  config.render(result.artifacts.main, element);
+  config.render(bytes, element);
 }
 
 /**
@@ -348,10 +365,11 @@ export function download(
  * Decodes artifact(s) to UTF-8 strings. This is particularly useful for SVG output.
  *
  * - Single artifact: Returns the string directly
- * - Multiple artifacts: Returns an array of strings (main first, then sorted by key)
+ * - Multiple artifacts (array): Returns an array of strings
+ * - Named artifacts (object): Returns an object with string values
  *
  * @param result - RenderResult from render()
- * @returns String or array of strings depending on number of artifacts
+ * @returns String, array of strings, or object with string values
  *
  * @example
  * // Single page
@@ -360,10 +378,16 @@ export function download(
  * // svg is '<svg>...</svg>'
  *
  * @example
- * // Multiple pages
+ * // Multiple pages (array)
  * const result = render(engine, longMarkdown, { format: 'svg' });
  * const pages = toString(result);
- * // pages is ['<svg>main</svg>', '<svg>page-1</svg>', '<svg>page-2</svg>']
+ * // pages is ['<svg>page 1</svg>', '<svg>page 2</svg>', ...]
+ *
+ * @example
+ * // Named artifacts (object)
+ * const result = render(engine, markdown, { format: 'svg' });
+ * const parts = toString(result);
+ * // parts is { main: '<svg>...</svg>', header: '<svg>...</svg>' }
  *
  * @example
  * // Send to server
@@ -371,22 +395,24 @@ export function download(
  * const data = toString(result);
  * await fetch('/api/save', {
  *   method: 'POST',
- *   body: JSON.stringify(Array.isArray(data) ? { pages: data } : { svg: data })
+ *   body: JSON.stringify({ data })
  * });
  */
-export function toString(result: RenderResult): string | string[] {
-  const keys = Object.keys(result.artifacts);
-
-  // Single artifact - return string directly
-  if (keys.length === 1) {
-    return new TextDecoder().decode(result.artifacts.main);
+export function toString(result: RenderResult): string | string[] | Record<string, string> {
+  if (result.artifacts instanceof Uint8Array) {
+    // Single artifact
+    return new TextDecoder().decode(result.artifacts);
+  } else if (Array.isArray(result.artifacts)) {
+    // Multiple artifacts as array
+    return result.artifacts.map(artifact => new TextDecoder().decode(artifact));
+  } else {
+    // Named artifacts as object
+    const strings: Record<string, string> = {};
+    for (const [key, artifact] of Object.entries(result.artifacts)) {
+      strings[key] = new TextDecoder().decode(artifact);
+    }
+    return strings;
   }
-
-  // Multiple artifacts - return array
-  const sortedKeys = ['main', ...keys.filter(k => k !== 'main').sort()];
-  return sortedKeys
-    .filter(key => result.artifacts[key])
-    .map(key => new TextDecoder().decode(result.artifacts[key]));
 }
 
 

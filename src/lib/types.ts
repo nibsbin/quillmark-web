@@ -74,13 +74,13 @@ export interface Artifact {
  * Result from rendering (standardized format)
  *
  * This interface represents the standardized render result contract.
- * All artifacts are Uint8Array values, with 'main' always present.
+ * Artifacts can be:
+ * - A single Uint8Array for single-page output
+ * - An array of Uint8Array for multi-page output (e.g., multiple SVG pages)
+ * - An object with named artifacts (e.g., { main: ..., header: ... })
  */
 export interface RenderResult {
-  artifacts: {
-    main: Uint8Array;
-    [key: string]: Uint8Array;
-  };
+  artifacts: Uint8Array | Uint8Array[] | Record<string, Uint8Array>;
   outputFormat: RenderFormat;
 }
 
