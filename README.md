@@ -43,7 +43,7 @@ engine.registerQuill(quill);
 
 // Get SVG string to inject into your own widgets/components
 const result = exporters.render(engine, markdown);  // Defaults to SVG
-const svgString = new TextDecoder().decode(result.artifacts.main);
+const svgString = new TextDecoder().decode(result.artifacts as Uint8Array);
 
 // Use in your application
 myCustomWidget.innerHTML = svgString;
@@ -88,10 +88,12 @@ const result = exporters.render(engine, markdown, {
 **Returns:** `RenderResult` with standardized format
 ```typescript
 {
-  artifacts: { main: Uint8Array },
+  artifacts: Uint8Array | Uint8Array[] | Record<string, Uint8Array>,
   outputFormat: 'pdf' | 'svg'
 }
 ```
+
+For single-page documents, `artifacts` is a `Uint8Array`. For multi-page documents, it's `Uint8Array[]`. For documents with named artifacts, it's `Record<string, Uint8Array>`.
 
 ### Export Functions
 
@@ -99,7 +101,7 @@ All export functions accept `RenderResult` from `render()`:
 
 ```typescript
 // Get SVG string (primary use case - direct access)
-const svgString = new TextDecoder().decode(result.artifacts.main);
+const svgString = new TextDecoder().decode(result.artifacts as Uint8Array);
 myWidget.innerHTML = svgString;
 
 // Get Blob (for upload, storage, etc.)
@@ -199,7 +201,7 @@ Visit http://localhost:5173 for a live editor with template selection and real-t
 
 ## Version
 
-**v1.0.0** - Stable API with simplified architecture
+**v1.1.0** - Stable API with simplified architecture
 
 ## License
 
