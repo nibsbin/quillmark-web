@@ -11,7 +11,7 @@ const BLOB_URL_REVOKE_DELAY = 1500;
  * Download bytes as a file using standard browser APIs
  */
 function downloadFile(bytes: Uint8Array, filename: string, mimeType: string): void {
-  const blob = new Blob([bytes], { type: mimeType });
+  const blob = new Blob([bytes as any], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -33,7 +33,7 @@ function displayResult(bytes: Uint8Array, format: 'pdf' | 'svg', element: HTMLEl
     element.innerHTML = new TextDecoder().decode(bytes);
   } else {
     // Create blob URL and embed for PDF viewing
-    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const blob = new Blob([bytes as any], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const embed = document.createElement('embed');
     embed.src = url;
