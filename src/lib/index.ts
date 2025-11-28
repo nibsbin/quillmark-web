@@ -17,9 +17,6 @@ import {
 import { fromZip as _fromZip } from './loaders';
 import { detectBinaryFile, debounce } from './utils';
 
-// Re-export WASM core classes
-export { Quillmark } from '@quillmark-test/wasm';
-
 // Export types
 export type {
   QuillJson,
@@ -32,6 +29,7 @@ export type {
   QuillInfo,
   Artifact,
   RenderResult,
+  QuillmarkEngine,
 } from './types';
 
 // Grouped exports - the only way to access utilities

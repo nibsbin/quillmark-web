@@ -7,15 +7,18 @@ Clean, type-safe API for loading Quillmark templates and rendering to PDF/SVG.
 ## Installation
 
 ```bash
-npm install @quillmark-test/web
+npm install @quillmark-test/web @quillmark-test/wasm
 ```
+
+> **Note:** `@quillmark-test/wasm` is a peer dependency and must be installed alongside this package.
 
 ## Quick Start
 
 ### Render to PDF
 
 ```typescript
-import { Quillmark, loaders, exporters } from '@quillmark-test/web';
+import { Quillmark } from '@quillmark-test/wasm';
+import { loaders, exporters } from '@quillmark-test/web';
 
 // Load template
 const response = await fetch('/templates/letter.zip');
@@ -25,24 +28,27 @@ const quill = await loaders.fromZip(await response.blob());
 const engine = new Quillmark();
 engine.registerQuill(quill);
 
-// Render and download
+// Parse and render
 const markdown = '# Hello World\n\nMy first document!';
-const result = exporters.render(engine, markdown, { format: 'pdf' });
+const parsed = Quillmark.parseMarkdown(markdown);
+const result = exporters.render(engine, parsed, { format: 'pdf' });
 exporters.download(result, 'output.pdf');
 ```
 
 ### Get SVG String (Primary Use Case)
 
 ```typescript
-import { Quillmark, loaders, exporters } from '@quillmark-test/web';
+import { Quillmark } from '@quillmark-test/wasm';
+import { loaders, exporters } from '@quillmark-test/web';
 
 // Setup
 const quill = await loaders.fromZip(await fetch('/templates/letter.zip').then(r => r.blob()));
 const engine = new Quillmark();
 engine.registerQuill(quill);
 
-// Get SVG string to inject into your own widgets/components
-const result = exporters.render(engine, markdown);  // Defaults to SVG
+// Parse markdown and render to SVG
+const parsed = Quillmark.parseMarkdown(markdown);
+const result = exporters.render(engine, parsed);  // Defaults to SVG
 const svgString = new TextDecoder().decode(result.artifacts as Uint8Array);
 
 // Use in your application
@@ -53,12 +59,16 @@ document.getElementById('preview').innerHTML = svgString;
 ### Live Preview with toElement()
 
 ```typescript
+import { Quillmark } from '@quillmark-test/wasm';
+import { exporters } from '@quillmark-test/web';
+
 // Alternative: Use toElement() for quick demos/playgrounds
 const editor = document.querySelector('#editor');
 const preview = document.querySelector('#preview');
 
 editor.addEventListener('input', () => {
-  const result = exporters.render(engine, editor.value);
+  const parsed = Quillmark.parseMarkdown(editor.value);
+  const result = exporters.render(engine, parsed);
   exporters.toElement(result, preview);  // Handles SVG/PDF automatically
 });
 ```
@@ -74,12 +84,15 @@ const quill = await loaders.fromZip(zipBlob);
 engine.registerQuill(quill);
 ```
 
-### `exporters.render(engine, markdown, options?)`
+### `exporters.render(engine, parsed, options?)`
 
-Render markdown to a standardized result.
+Render a pre-parsed document to a standardized result.
 
 ```typescript
-const result = exporters.render(engine, markdown, {
+import { Quillmark } from '@quillmark-test/wasm';
+
+const parsed = Quillmark.parseMarkdown(markdown);
+const result = exporters.render(engine, parsed, {
   format: 'pdf',      // 'pdf' | 'svg' (defaults to svg)
   quillName: 'letter' // optional: override detected quill
 });
@@ -120,7 +133,8 @@ exporters.download(result, 'document.pdf');
 ## Pattern: Render Once, Export Many
 
 ```typescript
-const result = exporters.render(engine, markdown, { format: 'pdf' });
+const parsed = Quillmark.parseMarkdown(markdown);
+const result = exporters.render(engine, parsed, { format: 'pdf' });
 
 // Export to multiple formats without re-rendering
 const blob = exporters.toBlob(result);
@@ -135,7 +149,8 @@ import { utils } from '@quillmark-test/web';
 
 // Debounce for live preview
 editor.addEventListener('input', utils.debounce(() => {
-  const result = exporters.render(engine, editor.value);
+  const parsed = Quillmark.parseMarkdown(editor.value);
+  const result = exporters.render(engine, parsed);
   exporters.toElement(result, preview);
 }, 300));
 
@@ -155,8 +170,67 @@ import type {
   RenderOptions,
   RenderFormat,
   QuillJson,
-  QuillInfo
+  QuillInfo,
+  QuillmarkEngine,
+  ParsedDocument
 } from '@quillmark-test/web';
+```
+
+## Migration from v1.x to v2.0.0
+
+### Breaking Changes
+
+1. **`@quillmark-test/wasm` is now a peer dependency** - You must install it separately:
+   ```bash
+   npm install @quillmark-test/web @quillmark-test/wasm
+   ```
+
+2. **`Quillmark` is no longer re-exported** - Import it directly from `@quillmark-test/wasm`:
+   ```typescript
+   // Before (v1.x)
+   import { Quillmark, exporters } from '@quillmark-test/web';
+   
+   // After (v2.0.0)
+   import { Quillmark } from '@quillmark-test/wasm';
+   import { exporters } from '@quillmark-test/web';
+   ```
+
+3. **`render()` signature changed** - It now accepts `ParsedDocument` instead of `string`:
+   ```typescript
+   // Before (v1.x)
+   const result = exporters.render(engine, markdown, { format: 'pdf' });
+   
+   // After (v2.0.0)
+   const parsed = Quillmark.parseMarkdown(markdown);
+   const result = exporters.render(engine, parsed, { format: 'pdf' });
+   ```
+
+### Migration Steps
+
+1. Update package.json to include both packages
+2. Update imports to source `Quillmark` from `@quillmark-test/wasm`
+3. Pre-parse markdown before calling `render()`
+
+### Full Migration Example
+
+```typescript
+// Before (v1.x)
+import { Quillmark, loaders, exporters } from '@quillmark-test/web';
+
+const engine = new Quillmark();
+engine.registerQuill(quill);
+const result = exporters.render(engine, markdown, { format: 'pdf' });
+exporters.download(result, 'output.pdf');
+
+// After (v2.0.0)
+import { Quillmark } from '@quillmark-test/wasm';
+import { loaders, exporters } from '@quillmark-test/web';
+
+const engine = new Quillmark();
+engine.registerQuill(quill);
+const parsed = Quillmark.parseMarkdown(markdown);
+const result = exporters.render(engine, parsed, { format: 'pdf' });
+exporters.download(result, 'output.pdf');
 ```
 
 ## Quill Template Format
@@ -201,7 +275,7 @@ Visit http://localhost:5173 for a live editor with template selection and real-t
 
 ## Version
 
-**v1.1.0** - Stable API with simplified architecture
+**v2.0.0** - Breaking change: peer dependency model with `QuillmarkEngine` interface
 
 ## License
 

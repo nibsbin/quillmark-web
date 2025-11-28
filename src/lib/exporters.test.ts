@@ -20,12 +20,10 @@ vi.mock('@quillmark-test/wasm', () => ({
 
 import { render, toBlob, toDataUrl, toElement } from './exporters';
 
-const TEST_MARKDOWN = `---
-title: Test Document
-QUILL: test_quill
----
-
-# Hello World`;
+const TEST_PARSED_DOC = {
+  fields: { title: 'Test Document' },
+  quillTag: 'test_quill'
+};
 
 describe('render', () => {
   describe('Unit tests (with mocks)', () => {
@@ -46,7 +44,7 @@ describe('render', () => {
       const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]); // %PDF header
       const engine = createMockEngine(pdfBytes, 'pdf');
 
-      const result = render(engine, TEST_MARKDOWN, { format: 'pdf' });
+      const result = render(engine, TEST_PARSED_DOC, { format: 'pdf' });
 
       expect(result).toBeDefined();
       expect(result.outputFormat).toBe('pdf');
@@ -56,7 +54,7 @@ describe('render', () => {
       const svgBytes = new TextEncoder().encode('<svg></svg>');
       const engine = createMockEngine(svgBytes, 'svg');
 
-      const result = render(engine, TEST_MARKDOWN, { format: 'svg' });
+      const result = render(engine, TEST_PARSED_DOC, { format: 'svg' });
 
       expect(result).toBeDefined();
       expect(result.outputFormat).toBe('svg');
@@ -66,7 +64,7 @@ describe('render', () => {
       const svgBytes = new TextEncoder().encode('<svg></svg>');
       const engine = createMockEngine(svgBytes, 'svg');
 
-      const result = render(engine, TEST_MARKDOWN);
+      const result = render(engine, TEST_PARSED_DOC);
 
       expect(result).toBeDefined();
     });
@@ -211,6 +209,7 @@ describe('Integration patterns (from quillmark-wasm)', () => {
     // (in browser environment or with proper WASM support):
     //
     // 1. Parse markdown:
+    //    import { Quillmark } from '@quillmark-test/wasm';
     //    const parsed = Quillmark.parseMarkdown(markdown);
     //
     // 2. Create engine and register quill:
@@ -218,21 +217,22 @@ describe('Integration patterns (from quillmark-wasm)', () => {
     //    engine.registerQuill(quillJson);
     //
     // 3. Render to result:
-    //    const result = render(engine, markdown, { format: 'pdf' });
+    //    import { exporters } from '@quillmark-test/web';
+    //    const result = exporters.render(engine, parsed, { format: 'pdf' });
     //
     // 4. Convert to blob:
-    //    const blob = toBlob(result);
+    //    const blob = exporters.toBlob(result);
     //    expect(blob.size).toBeGreaterThan(0);
     //
     // 5. Convert to data URL:
-    //    const dataUrl = await toDataUrl(result);
+    //    const dataUrl = await exporters.toDataUrl(result);
     //    expect(dataUrl.length).toBeGreaterThan(50);
 
     const expectedWorkflow = [
-      'Parse markdown with Quillmark.parseMarkdown()',
+      'Parse markdown with Quillmark.parseMarkdown() from @quillmark-test/wasm',
       'Register quill with engine.registerQuill()',
-      'Render using render()',
-      'Convert using toBlob or toDataUrl',
+      'Render using exporters.render(engine, parsed, options)',
+      'Convert using exporters.toBlob or exporters.toDataUrl',
       'Verify blob size or data URL length'
     ];
 

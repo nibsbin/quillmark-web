@@ -92,3 +92,20 @@ export interface RenderOptions {
   assets?: Record<string, Uint8Array>;
   quillName?: string;  // Optional: overrides quillTag from ParsedDocument
 }
+
+/**
+ * Interface describing the Quillmark engine API consumed by this library.
+ * 
+ * This abstraction allows @quillmark-test/web to accept any compatible engine
+ * implementation without directly depending on @quillmark-test/wasm types.
+ */
+export interface QuillmarkEngine {
+  /** Register a quill template with the engine */
+  registerQuill(quill: QuillJson): void;
+  
+  /** Get information about a registered quill */
+  getQuillInfo(quillName: string): QuillInfo;
+  
+  /** Render a parsed document */
+  render(parsed: ParsedDocument, options: { format: RenderFormat } & Record<string, unknown>): unknown;
+}

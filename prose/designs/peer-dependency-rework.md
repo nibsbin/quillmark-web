@@ -4,6 +4,8 @@
 
 This design document describes a major breaking change (v2.0.0) to decouple `@quillmark-test/web` from its dependency on `@quillmark-test/wasm` by making it a peer dependency instead of a direct dependency. This allows consumers to manage their own WASM version and prevents re-exporting of WASM types.
 
+> **Update (Phase 2 Scope Reduction)**: The library is now focused on utilities only. Rendering functionality has been removed. See [Scope Reduction](#scope-reduction-phase-2) for details.
+
 ## Problem Statement
 
 The current implementation has several issues:
@@ -252,4 +254,141 @@ This is a **major breaking change** requiring a version bump to **v2.0.0**.
 The semver guarantees:
 - v1.x consumers can continue using v1.x
 - v2.x consumers must update their code per the migration guide
-- Clear changelog and release notes will document all changes
+
+---
+
+## Scope Reduction (Phase 2)
+
+### Rationale
+
+After implementing Phase 1 (peer dependency rework), a strategic decision was made to further simplify the library. The `exporters` module, while useful, creates a thin wrapper over WASM functionality that:
+
+1. **Adds maintenance burden**: Changes to WASM output formats require updates to the web library
+2. **Limits flexibility**: Consumers are constrained to the abstraction layer's interpretation of WASM results
+3. **Duplicates effort**: Most consumers will import WASM directly anyway for `parseMarkdown()` and rendering
+
+### New Library Focus: Utilities Only
+
+The library will focus exclusively on utilities that are genuinely independent of WASM:
+
+| Module | Purpose | WASM Dependency |
+|--------|---------|-----------------|
+| `loaders.fromZip()` | Load Quill templates from zip files | None (uses fflate) |
+| `utils.detectBinaryFile()` | Check if filename indicates binary content | None |
+| `utils.debounce()` | Generic debounce utility | None |
+
+### What to Remove
+
+| Component | Reason for Removal |
+|-----------|-------------------|
+| `exporters.render()` | Consumers should use WASM directly |
+| `exporters.toBlob()` | Works with RenderResult from render() |
+| `exporters.toDataUrl()` | Works with RenderResult from render() |
+| `exporters.toString()` | Works with RenderResult from render() |
+| `exporters.toElement()` | Works with RenderResult from render() |
+| `exporters.download()` | Works with RenderResult from render() |
+| `QuillmarkEngine` interface | No longer needed without render() |
+| `RenderFormat` type | Rendering-specific |
+| `RenderOptions` type | Rendering-specific |
+| `ParsedDocument` type | Rendering-specific |
+| `QuillInfo` type | Rendering-specific |
+| `Artifact` type | Rendering-specific |
+| `RenderResult` type | Rendering-specific |
+
+### What to Keep
+
+**Types for Loaders:**
+- `QuillJson` - Return type of `fromZip()`
+- `FileTree` - Structure within QuillJson
+- `FileNode` - Individual file entries
+- `QuillMetadata` - Optional metadata in QuillJson
+
+### New API Surface (Phase 2)
+
+```typescript
+// src/lib/index.ts
+
+export type {
+  QuillJson,
+  FileTree,
+  FileNode,
+  QuillMetadata,
+} from './types';
+
+export const loaders = {
+  fromZip: _fromZip
+};
+
+export const utils = {
+  detectBinaryFile,
+  debounce
+};
+```
+
+### Updated Consumer Usage (Phase 2)
+
+```typescript
+import { Quillmark } from '@quillmark-test/wasm';
+import { loaders, utils } from '@quillmark-test/web';
+
+// Load a quill template (utility from @quillmark-test/web)
+const quill = await loaders.fromZip(await fetch('/templates/letter.zip').then(r => r.blob()));
+
+// Setup engine (WASM directly)
+const engine = new Quillmark();
+engine.registerQuill(quill);
+
+// Parse and render (WASM directly)
+const parsed = Quillmark.parseMarkdown(markdown);
+const result = engine.render(parsed, { format: 'pdf' });
+
+// Handle result (consumer's responsibility)
+const blob = new Blob([result.artifacts], { type: 'application/pdf' });
+```
+
+### Benefits of Scope Reduction
+
+1. **Simpler maintenance**: Fewer moving parts, less coupling to WASM changes
+2. **Clearer responsibility**: Library does one thing well (utilities)
+3. **Consumer flexibility**: Full control over rendering workflow
+4. **Smaller bundle**: Remove rendering abstraction layer
+5. **Future-proof**: WASM API changes don't require web library updates
+
+### Phase 2 Migration Guide
+
+For consumers using Phase 1 API (with exporters):
+
+```diff
+  import { Quillmark } from '@quillmark-test/wasm';
+- import { loaders, exporters } from '@quillmark-test/web';
++ import { loaders } from '@quillmark-test/web';
+
+  const quill = await loaders.fromZip(zipFile);
+  const engine = new Quillmark();
+  engine.registerQuill(quill);
+
+  const parsed = Quillmark.parseMarkdown(markdown);
+- const result = exporters.render(engine, parsed, { format: 'pdf' });
+- exporters.download(result, 'document.pdf');
++ const result = engine.render(parsed, { format: 'pdf' });
++ // Handle download manually
++ const blob = new Blob([result.artifacts], { type: 'application/pdf' });
++ const url = URL.createObjectURL(blob);
++ const a = document.createElement('a');
++ a.href = url;
++ a.download = 'document.pdf';
++ a.click();
++ URL.revokeObjectURL(url);
+```
+
+### Standalone Converter Utilities Decision
+
+**Question**: Should we keep any converter functions (toBlob, toDataUrl, etc.) as standalone utilities that work with `Uint8Array`?
+
+**Decision**: No. These functions are simple enough that consumers can implement them inline or use standard browser APIs:
+
+- `toBlob(bytes, mimeType)` → `new Blob([bytes], { type: mimeType })`
+- `toDataUrl(blob)` → `FileReader.readAsDataURL()` or `URL.createObjectURL()`
+- `download(blob, filename)` → Standard anchor tag download pattern
+
+Keeping these would add little value while increasing the API surface to maintain.

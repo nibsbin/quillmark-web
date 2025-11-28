@@ -2,8 +2,8 @@
  * Export helper utilities for converting rendered artifacts to browser formats
  */
 
-import { Quillmark } from '@quillmark-test/wasm';
 import type {
+  QuillmarkEngine,
   RenderOptions,
   RenderResult,
   RenderFormat,
@@ -155,7 +155,7 @@ function normalizeWasmResult(rawResult: any): RenderResult {
  * @internal
  */
 function getPreferredPreviewFormat(
-  engine: Quillmark,
+  engine: QuillmarkEngine,
   quillName?: string,
   userFormat?: RenderFormat
 ): RenderFormat {
@@ -189,36 +189,39 @@ function getPreferredPreviewFormat(
 // ============================================================================
 
 /**
- * Render markdown to a result that can be converted to various formats.
+ * Render a parsed document to a result that can be converted to various formats.
  * 
- * This is the core rendering function. It parses the markdown, determines
- * the quill to use, and renders the document. The returned RenderResult
+ * This is the core rendering function. It takes a pre-parsed document, determines
+ * the quill to use, and renders it. The returned RenderResult
  * can be passed to conversion functions like toBlob(), toDataUrl(), etc.
  * 
- * @param engine - Quillmark engine instance
- * @param markdown - Markdown content to render
+ * @param engine - Quillmark engine instance (implements QuillmarkEngine interface)
+ * @param parsed - Pre-parsed document from Quillmark.parseMarkdown()
  * @param options - Render options (format, quillName, assets)
  * @returns RenderResult containing artifacts and output format
  * 
  * @example
- * // Render to PDF
- * const result = render(engine, markdown, { format: 'pdf' });
- * const blob = toBlob(result);
+ * // Parse and render to PDF
+ * import { Quillmark } from '@quillmark-test/wasm';
+ * import { exporters } from '@quillmark-test/web';
+ * 
+ * const parsed = Quillmark.parseMarkdown(markdown);
+ * const result = exporters.render(engine, parsed, { format: 'pdf' });
+ * const blob = exporters.toBlob(result);
  * 
  * @example
  * // Render once, export many times
- * const result = render(engine, markdown, { format: 'svg' });
- * const blob = toBlob(result);
- * const dataUrl = await toDataUrl(result);
- * download(result, 'document.svg');
+ * const parsed = Quillmark.parseMarkdown(markdown);
+ * const result = exporters.render(engine, parsed, { format: 'svg' });
+ * const blob = exporters.toBlob(result);
+ * const dataUrl = await exporters.toDataUrl(result);
+ * exporters.download(result, 'document.svg');
  */
 export function render(
-  engine: Quillmark,
-  markdown: string,
+  engine: QuillmarkEngine,
+  parsed: ParsedDocument,
   options?: RenderOptions
 ): RenderResult {
-  // Parse markdown to get quill tag and fields
-  const parsed: ParsedDocument = Quillmark.parseMarkdown(markdown);
   const quillName = options?.quillName || parsed.quillTag;
 
   // Determine format (with smart default for preview)
@@ -244,8 +247,9 @@ export function render(
  * @returns Blob containing the rendered output
  *
  * @example
- * const result = render(engine, markdown, { format: 'pdf' });
- * const blob = toBlob(result);
+ * const parsed = Quillmark.parseMarkdown(markdown);
+ * const result = exporters.render(engine, parsed, { format: 'pdf' });
+ * const blob = exporters.toBlob(result);
  * const url = URL.createObjectURL(blob);
  */
 export function toBlob(result: RenderResult): Blob {
@@ -263,8 +267,9 @@ export function toBlob(result: RenderResult): Blob {
  * @returns Promise resolving to data URL string
  *
  * @example
- * const result = render(engine, markdown, { format: 'svg' });
- * const dataUrl = await toDataUrl(result);
+ * const parsed = Quillmark.parseMarkdown(markdown);
+ * const result = exporters.render(engine, parsed, { format: 'svg' });
+ * const dataUrl = await exporters.toDataUrl(result);
  * imgElement.src = dataUrl;
  */
 export async function toDataUrl(result: RenderResult): Promise<string> {
@@ -308,9 +313,10 @@ export async function toDataUrl(result: RenderResult): Promise<string> {
  * @param element - Target HTML element
  *
  * @example
- * const result = render(engine, markdown, { format: 'svg' });
+ * const parsed = Quillmark.parseMarkdown(markdown);
+ * const result = exporters.render(engine, parsed, { format: 'svg' });
  * const preview = document.getElementById('preview');
- * toElement(result, preview);
+ * exporters.toElement(result, preview);
  */
 export function toElement(
   result: RenderResult,
@@ -363,8 +369,9 @@ export function toElement(
  * @param filename - Name for the downloaded file
  *
  * @example
- * const result = render(engine, markdown, { format: 'pdf' });
- * download(result, 'document.pdf');
+ * const parsed = Quillmark.parseMarkdown(markdown);
+ * const result = exporters.render(engine, parsed, { format: 'pdf' });
+ * exporters.download(result, 'document.pdf');
  */
 export function download(
   result: RenderResult,
@@ -397,26 +404,30 @@ export function download(
  *
  * @example
  * // Single page
- * const result = render(engine, markdown, { format: 'svg' });
- * const svg = toString(result);
+ * const parsed = Quillmark.parseMarkdown(markdown);
+ * const result = exporters.render(engine, parsed, { format: 'svg' });
+ * const svg = exporters.toString(result);
  * // svg is '<svg>...</svg>'
  *
  * @example
  * // Multiple pages (array)
- * const result = render(engine, longMarkdown, { format: 'svg' });
- * const pages = toString(result);
+ * const parsed = Quillmark.parseMarkdown(longMarkdown);
+ * const result = exporters.render(engine, parsed, { format: 'svg' });
+ * const pages = exporters.toString(result);
  * // pages is ['<svg>page 1</svg>', '<svg>page 2</svg>', ...]
  *
  * @example
  * // Named artifacts (object)
- * const result = render(engine, markdown, { format: 'svg' });
- * const parts = toString(result);
+ * const parsed = Quillmark.parseMarkdown(markdown);
+ * const result = exporters.render(engine, parsed, { format: 'svg' });
+ * const parts = exporters.toString(result);
  * // parts is { main: '<svg>...</svg>', header: '<svg>...</svg>' }
  *
  * @example
  * // Send to server
- * const result = render(engine, markdown, { format: 'svg' });
- * const data = toString(result);
+ * const parsed = Quillmark.parseMarkdown(markdown);
+ * const result = exporters.render(engine, parsed, { format: 'svg' });
+ * const data = exporters.toString(result);
  * await fetch('/api/save', {
  *   method: 'POST',
  *   body: JSON.stringify({ data })

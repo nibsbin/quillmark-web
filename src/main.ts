@@ -1,5 +1,5 @@
+import { Quillmark } from '@quillmark-test/wasm';
 import {
-  Quillmark,
   loaders,
   exporters,
   utils
@@ -91,7 +91,8 @@ async function init() {
   // Auto-render preview when the markdown changes using new API
   const renderPreview = async () => {
     try {
-      const result = exporters.render(engine, markdownInput.value);
+      const parsed = Quillmark.parseMarkdown(markdownInput.value);
+      const result = exporters.render(engine, parsed);
       exporters.toElement(result, preview);
     } catch (err) {
       console.error('Preview render error:', err);
@@ -126,7 +127,8 @@ async function init() {
   downloadPdfBtn?.addEventListener('click', async () => {
     showLoading('Rendering document...');
     try {
-      const result = exporters.render(engine, markdownInput.value, { format: 'pdf' });
+      const parsed = Quillmark.parseMarkdown(markdownInput.value);
+      const result = exporters.render(engine, parsed, { format: 'pdf' });
       exporters.download(result, 'document.pdf');
       showStatus('Download started — check your browser downloads', 'success');
     } catch (err) {
@@ -139,7 +141,8 @@ async function init() {
   // This function demonstrates the multi-page SVG export API
   function exportSvgPages(): string | string[] | Record<string, string> {
     if (!markdownInput) throw new Error('Markdown input not available');
-    const result = exporters.render(engine, markdownInput.value, { format: 'svg' });
+    const parsed = Quillmark.parseMarkdown(markdownInput.value);
+    const result = exporters.render(engine, parsed, { format: 'svg' });
     return exporters.toString(result);
   }
 
@@ -151,7 +154,8 @@ async function init() {
     // Example: Get SVG as string(s) for programmatic use
     getSvg: () => {
       if (!markdownInput) throw new Error('Markdown input not available');
-      const result = exporters.render(engine, markdownInput.value, { format: 'svg' });
+      const parsed = Quillmark.parseMarkdown(markdownInput.value);
+      const result = exporters.render(engine, parsed, { format: 'svg' });
       const svg = exporters.toString(result);
 
       if (Array.isArray(svg)) {
