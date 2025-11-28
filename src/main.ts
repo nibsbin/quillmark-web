@@ -1,9 +1,59 @@
 import { Quillmark } from '@quillmark-test/wasm';
 import {
   loaders,
-  exporters,
   utils
 } from './lib';
+
+/** Time to wait before revoking blob URLs (in milliseconds) */
+const BLOB_URL_REVOKE_DELAY = 1500;
+
+/**
+ * Download bytes as a file using standard browser APIs
+ */
+function downloadFile(bytes: Uint8Array, filename: string, mimeType: string): void {
+  const blob = new Blob([bytes], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), BLOB_URL_REVOKE_DELAY);
+}
+
+/**
+ * Display rendered bytes in a DOM element
+ */
+function displayResult(bytes: Uint8Array, format: 'pdf' | 'svg', element: HTMLElement): void {
+  element.innerHTML = '';
+  
+  if (format === 'svg') {
+    // Inject SVG directly
+    element.innerHTML = new TextDecoder().decode(bytes);
+  } else {
+    // Create blob URL and embed for PDF viewing
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const embed = document.createElement('embed');
+    embed.src = url;
+    embed.type = 'application/pdf';
+    embed.width = '100%';
+    embed.height = '600px';
+    element.appendChild(embed);
+  }
+}
+
+/**
+ * Extract first artifact bytes from WASM render result
+ */
+function getFirstArtifactBytes(result: any): Uint8Array {
+  if (!result.artifacts || result.artifacts.length === 0) {
+    return new Uint8Array(0);
+  }
+  const artifact = result.artifacts[0];
+  return artifact.bytes || artifact;
+}
 
 // Init app
 async function init() {
@@ -88,12 +138,13 @@ async function init() {
     if (downloadPdfBtn) downloadPdfBtn.disabled = false;
   }
 
-  // Auto-render preview when the markdown changes using new API
+  // Auto-render preview when the markdown changes using WASM directly
   const renderPreview = async () => {
     try {
       const parsed = Quillmark.parseMarkdown(markdownInput.value);
-      const result = exporters.render(engine, parsed);
-      exporters.toElement(result, preview);
+      const result = engine.render(parsed, { format: 'svg' });
+      const bytes = getFirstArtifactBytes(result);
+      displayResult(bytes, 'svg', preview);
     } catch (err) {
       console.error('Preview render error:', err);
       showStatus(`Preview render failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
@@ -123,13 +174,14 @@ async function init() {
   // Initial preview render on page load
   renderPreview().catch(err => console.error('Initial preview render failed:', err));
 
-  // Download PDF on demand using new API
+  // Download PDF on demand using WASM directly
   downloadPdfBtn?.addEventListener('click', async () => {
     showLoading('Rendering document...');
     try {
       const parsed = Quillmark.parseMarkdown(markdownInput.value);
-      const result = exporters.render(engine, parsed, { format: 'pdf' });
-      exporters.download(result, 'document.pdf');
+      const result = engine.render(parsed, { format: 'pdf' });
+      const bytes = getFirstArtifactBytes(result);
+      downloadFile(bytes, 'document.pdf', 'application/pdf');
       showStatus('Download started — check your browser downloads', 'success');
     } catch (err) {
       console.error('Document render/download error:', err);
@@ -138,34 +190,45 @@ async function init() {
   });
 
   // Demo: Export SVG pages programmatically
-  // This function demonstrates the multi-page SVG export API
-  function exportSvgPages(): string | string[] | Record<string, string> {
+  // This function demonstrates the SVG export using WASM directly
+  function exportSvgPages(): string | string[] {
     if (!markdownInput) throw new Error('Markdown input not available');
     const parsed = Quillmark.parseMarkdown(markdownInput.value);
-    const result = exporters.render(engine, parsed, { format: 'svg' });
-    return exporters.toString(result);
+    const result = engine.render(parsed, { format: 'svg' });
+    
+    // Convert artifacts to strings
+    if (Array.isArray(result.artifacts)) {
+      return result.artifacts.map((artifact: any) => {
+        const bytes = artifact.bytes || artifact;
+        return new TextDecoder().decode(bytes);
+      });
+    }
+    const bytes = getFirstArtifactBytes(result);
+    return new TextDecoder().decode(bytes);
   }
 
   // Make API available globally for console usage
   (window as any).quillmark = {
     engine,
-    exporters,
     exportSvgPages,
     // Example: Get SVG as string(s) for programmatic use
     getSvg: () => {
       if (!markdownInput) throw new Error('Markdown input not available');
       const parsed = Quillmark.parseMarkdown(markdownInput.value);
-      const result = exporters.render(engine, parsed, { format: 'svg' });
-      const svg = exporters.toString(result);
-
-      if (Array.isArray(svg)) {
-        console.log(`Rendered ${svg.length} SVG pages`);
-      } else if (typeof svg === 'object') {
-        console.log(`Rendered SVG with artifacts: ${Object.keys(svg).join(', ')}`);
-      } else {
-        console.log('Rendered single SVG page');
+      const result = engine.render(parsed, { format: 'svg' });
+      
+      if (Array.isArray(result.artifacts) && result.artifacts.length > 1) {
+        const pages = result.artifacts.map((artifact: any) => {
+          const bytes = artifact.bytes || artifact;
+          return new TextDecoder().decode(bytes);
+        });
+        console.log(`Rendered ${pages.length} SVG pages`);
+        return pages;
       }
-
+      
+      const bytes = getFirstArtifactBytes(result);
+      const svg = new TextDecoder().decode(bytes);
+      console.log('Rendered single SVG page');
       return svg;
     }
   };

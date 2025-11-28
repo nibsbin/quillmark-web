@@ -1,11 +1,11 @@
 {
   "name": "@quillmark-test/web",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "publishConfig": {
     "access": "public"
   },
   "type": "module",
-  "description": "Opinionated frontend utilities for Quillmark WASM",
+  "description": "Utilities for loading Quillmark templates",
   "main": "./dist/lib/index.cjs",
   "module": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
@@ -56,6 +56,11 @@
   },
   "peerDependencies": {
     "@quillmark-test/wasm": ">=0.6.12"
+  },
+  "peerDependenciesMeta": {
+    "@quillmark-test/wasm": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@quillmark-test/wasm": "^0.6.12",

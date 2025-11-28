@@ -247,3 +247,74 @@ This work depends on Phase 1 (peer dependency rework) being completed.
 
 - Design: [`peer-dependency-rework.md`](../designs/peer-dependency-rework.md)
 - Phase 1 Implementation: [`completed/peer-dependency-rework-implementation.md`](./completed/peer-dependency-rework-implementation.md)
+
+---
+
+## Implementation Summary (Completed)
+
+**Status: COMPLETED**
+
+### Implemented Changes
+
+All phases were implemented as planned:
+
+#### Phase 2.1: Remove Exporters Module from index.ts ✅
+- Removed all imports from `./exporters`
+- Removed `exporters` object export
+- Removed rendering-related type exports
+
+#### Phase 2.2: Remove Types from types.ts ✅
+- Removed `ParsedDocument`, `RenderFormat`, `QuillInfo`, `Artifact`, `RenderResult`, `RenderOptions`, `QuillmarkEngine`
+- Kept only: `QuillJson`, `FileTree`, `FileNode`, `QuillMetadata`
+
+#### Phase 2.3: Delete Exporters File ✅
+- Deleted `src/lib/exporters.ts`
+- Deleted `src/lib/exporters.test.ts`
+
+#### Phase 2.4: Update Playground (src/main.ts) ✅
+- Removed `exporters` import
+- Implemented inline helper functions for rendering and downloading:
+  - `downloadFile()` - Downloads bytes as a file using standard browser APIs
+  - `displayResult()` - Displays rendered bytes in a DOM element
+  - `getFirstArtifactBytes()` - Extracts artifact bytes from WASM result
+- Updated all rendering logic to use WASM directly via `engine.render()`
+
+#### Phase 2.5: Update Tests ✅
+- Deleted `src/lib/exporters.test.ts`
+- Updated `src/lib/workflow.test.ts` to reflect v3.0.0 API changes
+- All remaining tests pass (19 passed, 14 skipped)
+
+#### Phase 2.6: Update README.md ✅
+- Updated description to reflect utils-only focus
+- Removed all `exporters` documentation
+- Updated examples to show direct WASM usage
+- Added v3.0.0 migration notes
+
+#### Phase 2.7: Update Package.json ✅
+- Bumped version to `3.0.0`
+- Updated description to "Utilities for loading Quillmark templates"
+- Made `@quillmark-test/wasm` an optional peer dependency via `peerDependenciesMeta`
+
+### Deviations from Plan
+
+None - implementation followed the plan exactly.
+
+### Verification Results
+
+```bash
+npm test        # ✅ 19 passed, 14 skipped
+npm run build:lib   # ✅ Library builds successfully (2.73 kB)
+npm run build       # ✅ Full build including playground completes
+```
+
+### Way Forward
+
+1. **Consumers migrating from v2.x** should:
+   - Remove `exporters` imports
+   - Call `engine.render()` directly instead of `exporters.render()`
+   - Implement download/display logic using standard browser APIs
+
+2. **Future considerations**:
+   - The library is now very lightweight (~2.73 kB)
+   - `@quillmark-test/wasm` is optional - consumers only need it for rendering
+   - Consider adding more utility functions if needed
