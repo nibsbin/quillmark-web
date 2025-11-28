@@ -1,5 +1,5 @@
 /**
- * @quillmark-test/web - Utilities for Quillmark
+ * @quillmark/web-utils - Utilities for Quillmark
  * 
  * This library provides convenient helpers for loading Quill templates.
  * For rendering, use @quillmark-test/wasm directly.

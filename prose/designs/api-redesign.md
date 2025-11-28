@@ -1,4 +1,4 @@
-# API Redesign for @quillmark-test/web
+# API Redesign for @quillmark/web-utils
 
 ## Current State Analysis
 

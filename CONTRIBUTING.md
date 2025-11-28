@@ -1,6 +1,6 @@
 # Contributing to Quillmark Web
 
-Thank you for your interest in contributing to Quillmark Web! This document provides guidelines for contributing to both the playground demo and the `@quillmark-test/web` library.
+Thank you for your interest in contributing to Quillmark Web! This document provides guidelines for contributing to both the playground demo and the `@quillmark/web-utils` library.
 
 ## Development Setup
 
@@ -39,7 +39,7 @@ Thank you for your interest in contributing to Quillmark Web! This document prov
 ## Project Structure
 
 - **`src/main.ts`** - Playground demo application
-- **`src/lib/`** - The `@quillmark-test/web` library
+- **`src/lib/`** - The `@quillmark/web-utils` library
   - `index.ts` - Main library exports
   - `loaders.ts` - Quill loading utilities (`fromZip`)
   - `exporters.ts` - Rendering and export helpers

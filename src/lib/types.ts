@@ -1,5 +1,5 @@
 /**
- * Type definitions for @quillmark-test/web utilities
+ * Type definitions for @quillmark/web-utils utilities
  */
 
 /**

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This design document describes a major breaking change (v2.0.0) to decouple `@quillmark-test/web` from its dependency on `@quillmark-test/wasm` by making it a peer dependency instead of a direct dependency. This allows consumers to manage their own WASM version and prevents re-exporting of WASM types.
+This design document describes a major breaking change (v2.0.0) to decouple `@quillmark/web-utils` from its dependency on `@quillmark-test/wasm` by making it a peer dependency instead of a direct dependency. This allows consumers to manage their own WASM version and prevents re-exporting of WASM types.
 
 > **Update (Phase 2 Scope Reduction)**: The library is now focused on utilities only. Rendering functionality has been removed. See [Scope Reduction](#scope-reduction-phase-2) for details.
 
@@ -10,9 +10,9 @@ This design document describes a major breaking change (v2.0.0) to decouple `@qu
 
 The current implementation has several issues:
 
-1. **Tight Coupling**: `@quillmark-test/web` re-exports `Quillmark` from `@quillmark-test/wasm`, creating a tight coupling between the libraries.
+1. **Tight Coupling**: `@quillmark/web-utils` re-exports `Quillmark` from `@quillmark-test/wasm`, creating a tight coupling between the libraries.
 
-2. **Version Lock-in**: Consumers are locked to the specific WASM version bundled with `@quillmark-test/web`, preventing them from:
+2. **Version Lock-in**: Consumers are locked to the specific WASM version bundled with `@quillmark/web-utils`, preventing them from:
    - Using newer WASM features before a web library release
    - Pinning to older WASM versions for stability
    - Managing WASM versions across multiple projects consistently
@@ -56,7 +56,7 @@ export function render(
 
 ### Consumer Usage
 ```typescript
-import { Quillmark, loaders, exporters } from '@quillmark-test/web';
+import { Quillmark, loaders, exporters } from '@quillmark/web-utils';
 const engine = new Quillmark();
 ```
 
@@ -87,7 +87,7 @@ Define a `QuillmarkEngine` interface that describes the required engine behavior
 /**
  * Interface describing the Quillmark engine API consumed by this library.
  * 
- * This abstraction allows @quillmark-test/web to accept any compatible engine
+ * This abstraction allows @quillmark/web-utils to accept any compatible engine
  * implementation without directly depending on @quillmark-test/wasm types.
  */
 export interface QuillmarkEngine {
@@ -180,7 +180,7 @@ This approach:
 
 ```typescript
 import { Quillmark } from '@quillmark-test/wasm';
-import { loaders, exporters } from '@quillmark-test/web';
+import { loaders, exporters } from '@quillmark/web-utils';
 
 // Setup
 const quill = await loaders.fromZip(await fetch('/templates/letter.zip').then(r => r.blob()));
@@ -226,9 +226,9 @@ npm install @quillmark-test/wasm
 ### Step 2: Update Imports
 
 ```diff
-- import { Quillmark, loaders, exporters } from '@quillmark-test/web';
+- import { Quillmark, loaders, exporters } from '@quillmark/web-utils';
 + import { Quillmark } from '@quillmark-test/wasm';
-+ import { loaders, exporters } from '@quillmark-test/web';
++ import { loaders, exporters } from '@quillmark/web-utils';
 ```
 
 ### Step 3: Update Render Calls
@@ -244,7 +244,7 @@ npm install @quillmark-test/wasm
 The `QuillmarkEngine` interface must remain compatible with the `Quillmark` class from `@quillmark-test/wasm`. TypeScript's structural typing ensures this works as long as the class implements the required methods.
 
 If the WASM library changes its API in a way that breaks the interface:
-- `@quillmark-test/web` would need a corresponding update
+- `@quillmark/web-utils` would need a corresponding update
 - The `peerDependencies` version constraint would need to be updated
 
 ## Versioning
@@ -329,9 +329,9 @@ export const utils = {
 
 ```typescript
 import { Quillmark } from '@quillmark-test/wasm';
-import { loaders, utils } from '@quillmark-test/web';
+import { loaders, utils } from '@quillmark/web-utils';
 
-// Load a quill template (utility from @quillmark-test/web)
+// Load a quill template (utility from @quillmark/web-utils)
 const quill = await loaders.fromZip(await fetch('/templates/letter.zip').then(r => r.blob()));
 
 // Setup engine (WASM directly)
@@ -360,8 +360,8 @@ For consumers using Phase 1 API (with exporters):
 
 ```diff
   import { Quillmark } from '@quillmark-test/wasm';
-- import { loaders, exporters } from '@quillmark-test/web';
-+ import { loaders } from '@quillmark-test/web';
+- import { loaders, exporters } from '@quillmark/web-utils';
++ import { loaders } from '@quillmark/web-utils';
 
   const quill = await loaders.fromZip(zipFile);
   const engine = new Quillmark();

@@ -1,4 +1,4 @@
-# @quillmark-test/web
+# @quillmark/web-utils
 
 > Utilities for loading Quillmark templates in the browser
 
@@ -7,7 +7,7 @@ Lightweight utility library for loading Quill templates from zip files. For rend
 ## Installation
 
 ```bash
-npm install @quillmark-test/web
+npm install @quillmark/web-utils
 ```
 
 > **Note:** `@quillmark-test/wasm` is an optional peer dependency. Install it if you need rendering functionality.
@@ -18,7 +18,7 @@ npm install @quillmark-test/web
 
 ```typescript
 import { Quillmark } from '@quillmark-test/wasm';
-import { loaders } from '@quillmark-test/web';
+import { loaders } from '@quillmark/web-utils';
 
 // Load template from zip
 const response = await fetch('/templates/letter.zip');
@@ -47,7 +47,7 @@ URL.revokeObjectURL(url);
 
 ```typescript
 import { Quillmark } from '@quillmark-test/wasm';
-import { loaders } from '@quillmark-test/web';
+import { loaders } from '@quillmark/web-utils';
 
 // Setup
 const quill = await loaders.fromZip(await fetch('/templates/letter.zip').then(r => r.blob()));
@@ -81,7 +81,7 @@ engine.registerQuill(quill);
 Create a debounced version of a function.
 
 ```typescript
-import { utils } from '@quillmark-test/web';
+import { utils } from '@quillmark/web-utils';
 
 const debouncedRender = utils.debounce(() => {
   const parsed = Quillmark.parseMarkdown(editor.value);
@@ -97,7 +97,7 @@ editor.addEventListener('input', debouncedRender);
 Detect if a file should be treated as binary based on its extension.
 
 ```typescript
-import { utils } from '@quillmark-test/web';
+import { utils } from '@quillmark/web-utils';
 
 if (utils.detectBinaryFile('image.png')) {
   // Handle as binary
@@ -114,7 +114,7 @@ import type {
   FileTree,
   FileNode,
   QuillMetadata
-} from '@quillmark-test/web';
+} from '@quillmark/web-utils';
 ```
 
 ## Migration from v2.x to v3.0.0
@@ -125,7 +125,7 @@ import type {
    ```typescript
    // Before (v2.x)
    import { Quillmark } from '@quillmark-test/wasm';
-   import { exporters } from '@quillmark-test/web';
+   import { exporters } from '@quillmark/web-utils';
    
    const parsed = Quillmark.parseMarkdown(markdown);
    const result = exporters.render(engine, parsed, { format: 'pdf' });

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan outlines the implementation steps to reduce `@quillmark-test/web` to a utils-only library, removing all rendering functionality as described in the design document [`peer-dependency-rework.md`](../designs/peer-dependency-rework.md#scope-reduction-phase-2).
+This plan outlines the implementation steps to reduce `@quillmark/web-utils` to a utils-only library, removing all rendering functionality as described in the design document [`peer-dependency-rework.md`](../designs/peer-dependency-rework.md#scope-reduction-phase-2).
 
 ## Current State (After Phase 1)
 

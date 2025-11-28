@@ -18,7 +18,7 @@
  * 6. Tests asset handling
  * 
  * v3.0.0 API Changes:
- * - @quillmark-test/web is now a utils-only library (loaders + utils)
+ * - @quillmark/web-utils is now a utils-only library (loaders + utils)
  * - Rendering must be done directly with @quillmark-test/wasm engine.render()
  * - The exporters module has been removed
  */
@@ -27,7 +27,7 @@ import { describe, it, expect } from 'vitest';
 
 // Note: In a proper browser environment or with WASM support, import like this:
 // import { Quillmark } from '@quillmark-test/wasm';
-// import { loaders, utils } from '@quillmark-test/web';
+// import { loaders, utils } from '@quillmark/web-utils';
 
 // For now, we'll create a test suite that documents the expected behavior
 // The actual WASM tests can be run separately or in a browser test environment
@@ -135,7 +135,7 @@ describe('End-to-End Workflow Tests (following quillmark-wasm patterns)', () => 
     // Quillmark integrations
     // 
     // v3.0.0 changes:
-    // - @quillmark-test/web is now a utils-only library
+    // - @quillmark/web-utils is now a utils-only library
     // - loaders.fromZip() for loading quill templates
     // - utils.debounce() and utils.detectBinaryFile() for utilities
     // - Rendering must be done directly with engine.render() from @quillmark-test/wasm

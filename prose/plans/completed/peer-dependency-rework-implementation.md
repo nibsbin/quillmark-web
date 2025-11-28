@@ -176,14 +176,14 @@ const result = exporters.render(engine, parsed, { format: 'pdf' });
 **Installation section:**
 
 ```bash
-npm install @quillmark-test/web @quillmark-test/wasm
+npm install @quillmark/web-utils @quillmark-test/wasm
 ```
 
 **Example updates:**
 
 ```typescript
 import { Quillmark } from '@quillmark-test/wasm';
-import { loaders, exporters } from '@quillmark-test/web';
+import { loaders, exporters } from '@quillmark/web-utils';
 
 const engine = new Quillmark();
 engine.registerQuill(quill);
