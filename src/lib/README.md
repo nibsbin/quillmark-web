@@ -1,4 +1,4 @@
-# @quillmark-test/web - Frontend Utilities
+# @quillmark/web-utils - Frontend Utilities
 
 > Opinionated, convenient utilities for working with Quillmark in the browser.
 
@@ -16,7 +16,7 @@ This library wraps `@quillmark-test/wasm` with high-level helpers for common fro
 ## Installation
 
 ```bash
-npm install @quillmark-test/wasm @quillmark-test/web
+npm install @quillmark-test/wasm @quillmark/web-utils
 ```
 
 ## Philosophy: Zip-Only Loading
@@ -33,7 +33,7 @@ This library takes an opinionated approach: **all Quills must be loaded from .zi
 ### Load and Render a Quill (New API)
 
 ```typescript
-import { Quillmark, loaders, exporters } from '@quillmark-test/web';
+import { Quillmark, loaders, exporters } from '@quillmark/web-utils';
 
 async function renderDocument() {
   // Load Quill from server
@@ -57,7 +57,7 @@ async function renderDocument() {
 ### Real-time SVG Preview (New API)
 
 ```typescript
-import { Quillmark, loaders, exporters, utils } from '@quillmark-test/web';
+import { Quillmark, loaders, exporters, utils } from '@quillmark/web-utils';
 
 async function setupEditor() {
   // Load Quill from zip
@@ -82,7 +82,7 @@ async function setupEditor() {
 ### Render Once, Export Many Times
 
 ```typescript
-import { Quillmark, loaders, exporters } from '@quillmark-test/web';
+import { Quillmark, loaders, exporters } from '@quillmark/web-utils';
 
 async function exportMultipleFormats() {
   const response = await fetch('/quills/letter.zip');
@@ -112,7 +112,7 @@ async function exportMultipleFormats() {
 The `Quillmark` class is re-exported directly from `@quillmark-test/wasm`. Use `new Quillmark()` to create instances:
 
 ```typescript
-import { Quillmark } from '@quillmark-test/web';
+import { Quillmark } from '@quillmark/web-utils';
 
 const engine = new Quillmark();
 ```
@@ -124,7 +124,7 @@ All WASM methods are available: `registerQuill()`, `render()`, etc.
 #### `loaders`
 
 ```typescript
-import { loaders } from '@quillmark-test/web';
+import { loaders } from '@quillmark/web-utils';
 
 // loaders.fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson>
 const quillJson = await loaders.fromZip(zipBlob);
@@ -143,7 +143,7 @@ Load a Quill from a .zip file. This is the **only** supported loading method.
 The exporters provide a clean, composable API for rendering and exporting documents:
 
 ```typescript
-import { exporters } from '@quillmark-test/web';
+import { exporters } from '@quillmark/web-utils';
 
 // 1. Render markdown to get a result
 const result = exporters.render(engine, markdown, { format: 'pdf' });
@@ -173,7 +173,7 @@ exporters.download(result, 'output.pdf');
 #### `utils`
 
 ```typescript
-import { utils } from '@quillmark-test/web';
+import { utils } from '@quillmark/web-utils';
 
 // utils.debounce(fn, wait): Function
 const debouncedHandler = utils.debounce(() => { /* ... */ }, 300);
