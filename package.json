@@ -55,7 +55,7 @@
     "fflate": "^0.8.2"
   },
   "peerDependencies": {
-    "@quillmark-test/wasm": ">=0.6.12"
+    "@quillmark-test/wasm": ">=0.8"
   },
   "peerDependenciesMeta": {
     "@quillmark-test/wasm": {
@@ -63,7 +63,6 @@
     }
   },
   "devDependencies": {
-    "@quillmark-test/wasm": "^0.6.12",
     "@types/node": "^24.7.0",
     "@vitest/ui": "^3.2.4",
     "happy-dom": "^20.0.10",
