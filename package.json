@@ -55,7 +55,7 @@
     "fflate": "^0.8.2"
   },
   "peerDependencies": {
-    "@quillmark-test/wasm": ">=0.8"
+    "@quillmark-test/wasm": ">=0.9.0"
   },
   "peerDependenciesMeta": {
     "@quillmark-test/wasm": {

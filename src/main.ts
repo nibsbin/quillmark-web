@@ -48,11 +48,58 @@ function displayResult(bytes: Uint8Array, format: 'pdf' | 'svg', element: HTMLEl
  * Extract first artifact bytes from WASM render result
  */
 function getFirstArtifactBytes(result: any): Uint8Array {
-  if (!result.artifacts || result.artifacts.length === 0) {
+  if (!result.artifacts) {
     return new Uint8Array(0);
   }
-  const artifact = result.artifacts[0];
-  return artifact.bytes || artifact;
+
+  // Helper to convert any byte format to Uint8Array
+  const toUint8Array = (value: any): Uint8Array => {
+    if (value == null) return new Uint8Array(0);
+    
+    // Unwrap { bytes: ... } wrapper objects
+    if (typeof value === 'object' && 'bytes' in value) {
+      return toUint8Array(value.bytes);
+    }
+    
+    // Already a Uint8Array
+    if (value instanceof Uint8Array) {
+      return value;
+    }
+    
+    // ArrayBuffer
+    if (value instanceof ArrayBuffer) {
+      return new Uint8Array(value);
+    }
+    
+    // Plain array of numbers
+    if (Array.isArray(value)) {
+      return new Uint8Array(value);
+    }
+    
+    return new Uint8Array(0);
+  };
+
+  const artifacts = result.artifacts;
+
+  // Array format: get first element
+  if (Array.isArray(artifacts)) {
+    if (artifacts.length === 0) return new Uint8Array(0);
+    return toUint8Array(artifacts[0]);
+  }
+
+  // Object format: get 'main' or first available key
+  if (typeof artifacts === 'object') {
+    if ('main' in artifacts) {
+      return toUint8Array(artifacts.main);
+    }
+    const keys = Object.keys(artifacts);
+    if (keys.length > 0) {
+      return toUint8Array(artifacts[keys[0]]);
+    }
+  }
+
+  // Direct format
+  return toUint8Array(artifacts);
 }
 
 // Init app
