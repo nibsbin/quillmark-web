@@ -6,6 +6,10 @@
   },
   "type": "module",
   "description": "Utilities for loading Quillmark templates",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nibsbin/quillmark-web"
+  },
   "main": "./dist/lib/index.cjs",
   "module": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
@@ -36,9 +40,9 @@
     "test:ui": "vitest --ui",
     "preversion": "npm test",
     "postversion": "git push --follow-tags",
-    "release:patch": "npm version patch && git push origin main --tags",
-    "release:minor": "npm version minor && git push origin main --tags",
-    "release:major": "npm version major && git push origin main --tags",
+    "release:patch": "npm version patch",
+    "release:minor": "npm version minor",
+    "release:major": "npm version major",
     "update-quills": "git subtree pull --prefix=tonguetoquill-collection https://github.com/nibsbin/tonguetoquill-collection.git main --squash"
   },
   "keywords": [
