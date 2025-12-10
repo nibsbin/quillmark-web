@@ -21,11 +21,11 @@ const TEST_QUILL = {
       contents: `[Quill]
 name = "test_quill"
 backend = "typst"
-glue = "glue.typ"
+plate_file = "plate.typ"
 description = "Test quill for smoke tests"
 `
     },
-    'glue.typ': {
+    'plate.typ': {
       contents: `= {{ title | String }}
 
 {{ body | Content }}`
@@ -46,10 +46,10 @@ This is a test document.`
 describe('quillmark-wasm smoke tests', () => {
   it('should parse markdown with YAML frontmatter', () => {
     const parsed = Quillmark.parseMarkdown(TEST_MARKDOWN)
-    
+
     expect(parsed).toBeDefined()
     expect(parsed.fields).toBeDefined()
-    
+
     // fields should be a plain object, not a Map
     expect(parsed.fields instanceof Map).toBe(false)
     expect(parsed.fields instanceof Object).toBe(true)
@@ -60,11 +60,11 @@ describe('quillmark-wasm smoke tests', () => {
 
   it('should create engine and register quill', () => {
     const engine = new Quillmark()
-    
+
     expect(() => {
       engine.registerQuill(TEST_QUILL)
     }).not.toThrow()
-    
+
     const quills = engine.listQuills()
     expect(quills).toContain('test_quill')
   })
@@ -72,14 +72,14 @@ describe('quillmark-wasm smoke tests', () => {
   it('should get quill info after registration', () => {
     const engine = new Quillmark()
     engine.registerQuill(TEST_QUILL)
-    
+
     const info = engine.getQuillInfo('test_quill')
-    
+
     expect(info).toBeDefined()
     expect(info.name).toBe('test_quill')
     expect(info.backend).toBe('typst')
     expect(info.supportedFormats).toContain('pdf')
-    
+
     // metadata and fieldSchemas should be plain objects, not Maps
     expect(info.metadata instanceof Map).toBe(false)
     expect(info.metadata instanceof Object).toBe(true)
@@ -87,33 +87,33 @@ describe('quillmark-wasm smoke tests', () => {
     expect(info.fieldSchemas instanceof Object).toBe(true)
   })
 
-  it('should render glue template', () => {
+  it('should render plate template', () => {
     const engine = new Quillmark()
-    engine.registerQuill( TEST_QUILL)
-    
-    const glue = engine.renderGlue('test_quill', TEST_MARKDOWN)
-    
-    expect(glue).toBeDefined()
-    expect(typeof glue).toBe('string')
-    expect(glue).toContain('Test Document')
+    engine.registerQuill(TEST_QUILL)
+
+    const plate = engine.renderPlate('test_quill', TEST_MARKDOWN)
+
+    expect(plate).toBeDefined()
+    expect(typeof plate).toBe('string')
+    expect(plate).toContain('Test Document')
   })
 
   it('should complete full workflow: parse → register → render', () => {
     // Step 1: Parse markdown
     const parsed = Quillmark.parseMarkdown(TEST_MARKDOWN)
     expect(parsed).toBeDefined()
-    
+
     // Step 2: Create engine and register quill
     const engine = new Quillmark()
-    engine.registerQuill( TEST_QUILL)
-    
+    engine.registerQuill(TEST_QUILL)
+
     // Step 3: Get quill info
     const info = engine.getQuillInfo('test_quill')
     expect(info.supportedFormats).toContain('pdf')
-    
+
     // Step 4: Render to PDF
     const result = engine.render(parsed, { format: 'pdf' })
-    
+
     expect(result).toBeDefined()
     expect(result.artifacts).toBeDefined()
     expect(result.artifacts.length).toBeGreaterThan(0)
@@ -124,7 +124,7 @@ describe('quillmark-wasm smoke tests', () => {
 
   it('should handle error: unregistered quill', () => {
     const engine = new Quillmark()
-    
+
     expect(() => {
       engine.getQuillInfo('nonexistent_quill')
     }).toThrow()
@@ -138,7 +138,7 @@ this is not valid yaml
 ---
 
 # Content`
-    
+
     expect(() => {
       Quillmark.parseMarkdown(badMarkdown)
     }).toThrow()
@@ -148,7 +148,7 @@ this is not valid yaml
     const parsed = Quillmark.parseMarkdown(TEST_MARKDOWN)
     const engine = new Quillmark()
     // Don't register the quill
-    
+
     expect(() => {
       engine.render(parsed, { format: 'pdf' })
     }).toThrow()
@@ -157,10 +157,10 @@ this is not valid yaml
   it('should render to SVG format', () => {
     const parsed = Quillmark.parseMarkdown(TEST_MARKDOWN)
     const engine = new Quillmark()
-    engine.registerQuill( TEST_QUILL)
-    
+    engine.registerQuill(TEST_QUILL)
+
     const result = engine.render(parsed, { format: 'svg' })
-    
+
     expect(result).toBeDefined()
     expect(result.artifacts).toBeDefined()
     expect(result.artifacts.length).toBeGreaterThan(0)
@@ -169,32 +169,32 @@ this is not valid yaml
 
   it('should unregister quill', () => {
     const engine = new Quillmark()
-    engine.registerQuill( TEST_QUILL)
-    
+    engine.registerQuill(TEST_QUILL)
+
     expect(engine.listQuills()).toContain('test_quill')
-    
+
     engine.unregisterQuill('test_quill')
-    
+
     expect(engine.listQuills()).not.toContain('test_quill')
   })
 
   it('should accept assets as plain JavaScript objects', () => {
     const parsed = Quillmark.parseMarkdown(TEST_MARKDOWN)
     const engine = new Quillmark()
-    engine.registerQuill( TEST_QUILL)
-    
+    engine.registerQuill(TEST_QUILL)
+
     // Assets should be passed as plain JavaScript objects with byte arrays
     const assets = {
       'logo.png': [137, 80, 78, 71],
       'font.ttf': [0, 1, 2, 3]
     }
-    
+
     // This should not throw - assets is a plain object
-    const result = engine.render(parsed, { 
+    const result = engine.render(parsed, {
       format: 'pdf',
       assets: assets
     })
-    
+
     expect(result).toBeDefined()
     expect(result.artifacts).toBeDefined()
   })
@@ -206,19 +206,19 @@ this is not valid yaml
     expect(parsed.fields instanceof Object).toBe(true)
     expect(parsed.fields.title).toBe('Test Document')
     expect(parsed.fields.author).toBe('Test Author')
-    
+
     // Step 2: Register and get quill info - metadata and fieldSchemas should be plain objects
     const engine = new Quillmark()
-    engine.registerQuill( TEST_QUILL)
+    engine.registerQuill(TEST_QUILL)
     const info = engine.getQuillInfo('test_quill')
-    
+
     expect(info.metadata instanceof Map).toBe(false)
     expect(info.metadata instanceof Object).toBe(true)
     expect(info.metadata.backend).toBe('typst')
-    
+
     expect(info.fieldSchemas instanceof Map).toBe(false)
     expect(info.fieldSchemas instanceof Object).toBe(true)
-    
+
     // Step 3: Render with assets as plain object
     const result = engine.render(parsed, {
       format: 'pdf',
@@ -226,7 +226,7 @@ this is not valid yaml
         'test.txt': [72, 101, 108, 108, 111]
       }
     })
-    
+
     expect(result).toBeDefined()
     expect(result.artifacts).toBeDefined()
     expect(Array.isArray(result.warnings)).toBe(true)

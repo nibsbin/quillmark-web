@@ -24,7 +24,7 @@ describe('detectBinaryFile', () => {
   });
 
   it('should not detect text files as binary', () => {
-    expect(detectBinaryFile('glue.typ')).toBe(false);
+    expect(detectBinaryFile('plate.typ')).toBe(false);
     expect(detectBinaryFile('Quill.toml')).toBe(false);
     expect(detectBinaryFile('README.md')).toBe(false);
     expect(detectBinaryFile('script.js')).toBe(false);
@@ -68,9 +68,9 @@ describe('debounce', () => {
     debounced();
     vi.advanceTimersByTime(100);
     debounced();
-    
+
     expect(fn).not.toHaveBeenCalled();
-    
+
     vi.advanceTimersByTime(250);
     expect(fn).toHaveBeenCalledTimes(1);
   });

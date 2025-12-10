@@ -14,7 +14,7 @@ describe('fromZip', () => {
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
         'Quill.toml': new TextEncoder().encode('[quill]\nname = "test"'),
-        'glue.typ': new TextEncoder().encode('#let content = "test"'),
+        'plate.typ': new TextEncoder().encode('#let content = "test"'),
         'test.md': new TextEncoder().encode('# Test Document')
       });
     });
@@ -27,7 +27,7 @@ describe('fromZip', () => {
     expect(result.files['Quill.toml']).toHaveProperty('contents');
     expect(typeof result.files['Quill.toml'].contents).toBe('string');
     expect(result.files['Quill.toml'].contents).toContain('[quill]');
-    expect(result.files).toHaveProperty('glue.typ');
+    expect(result.files).toHaveProperty('plate.typ');
     expect(result.files).toHaveProperty('test.md');
   });
 
@@ -52,7 +52,7 @@ describe('fromZip', () => {
     // Mock unzip without Quill.toml
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
-        'glue.typ': new TextEncoder().encode('#let content = "test"')
+        'plate.typ': new TextEncoder().encode('#let content = "test"')
       });
     });
 
@@ -90,7 +90,7 @@ describe('fromZip', () => {
     });
 
     const invalidZip = new Uint8Array([1, 2, 3, 4, 5]);
-    
+
     await expect(fromZip(invalidZip.buffer)).rejects.toThrow();
   });
 
@@ -118,7 +118,7 @@ describe('fromZip', () => {
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
         'my-quill/Quill.toml': new TextEncoder().encode('[quill]\nname = "nested"'),
-        'my-quill/glue.typ': new TextEncoder().encode('#let content = "test"'),
+        'my-quill/plate.typ': new TextEncoder().encode('#let content = "test"'),
         'my-quill/assets/logo.png': new Uint8Array([1, 2, 3])
       });
     });
@@ -129,7 +129,7 @@ describe('fromZip', () => {
     // Files should be at root level (prefix stripped)
     expect(result.files).toHaveProperty('Quill.toml');
     expect(result.files['Quill.toml'].contents).toContain('[quill]');
-    expect(result.files).toHaveProperty('glue.typ');
+    expect(result.files).toHaveProperty('plate.typ');
     expect(result.files).toHaveProperty('assets');
     expect(result.files.assets).toHaveProperty('logo.png');
   });
@@ -140,7 +140,7 @@ describe('fromZip', () => {
       callback(null, {
         'folder1/file1.txt': new TextEncoder().encode('file1'),
         'folder2/Quill.toml': new TextEncoder().encode('[quill]'),
-        'folder2/glue.typ': new TextEncoder().encode('#let x = 1')
+        'folder2/plate.typ': new TextEncoder().encode('#let x = 1')
       });
     });
 

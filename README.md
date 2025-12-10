@@ -169,7 +169,7 @@ import type {
 
 Templates are zip files containing:
 - `Quill.toml` - Template configuration
-- `glue.typ` - Typst template
+- `plate.typ` - Typst template
 - `assets/` - Fonts, images, etc.
 - `packages/` - Typst packages
 
@@ -178,7 +178,7 @@ When loaded via `fromZip()`, they become `QuillJson`:
 {
   files: {
     'Quill.toml': { contents: '...' },
-    'glue.typ': { contents: '...' },
+    'plate.typ': { contents: '...' },
     'assets': {
       'font.otf': { contents: [137, 80, ...] }  // Binary as number array
     }

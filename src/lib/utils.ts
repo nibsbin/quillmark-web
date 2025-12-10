@@ -16,11 +16,11 @@ export const BINARY_EXTENSIONS = new Set([
  * 
  * @example
  * detectBinaryFile('logo.png')  // true
- * detectBinaryFile('glue.typ')  // false
+ * detectBinaryFile('plate.typ')  // false
  */
 export function detectBinaryFile(filename: string): boolean {
-  const ext = filename.includes('.') 
-    ? filename.slice(filename.lastIndexOf('.')).toLowerCase() 
+  const ext = filename.includes('.')
+    ? filename.slice(filename.lastIndexOf('.')).toLowerCase()
     : '';
   return BINARY_EXTENSIONS.has(ext);
 }

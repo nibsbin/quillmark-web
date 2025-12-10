@@ -122,8 +122,8 @@ describe('End-to-End Workflow Tests (following quillmark-wasm patterns)', () => 
     });
   });
 
-  describe('Glue Rendering (Debugging)', () => {
-    it.skip('should render glue template for debugging', () => {
+  describe('Plate Rendering (Debugging)', () => {
+    it.skip('should render plate template for debugging', () => {
       expect(skipReason).toBeDefined();
     });
   });
@@ -139,7 +139,7 @@ describe('End-to-End Workflow Tests (following quillmark-wasm patterns)', () => 
     // - loaders.fromZip() for loading quill templates
     // - utils.debounce() and utils.detectBinaryFile() for utilities
     // - Rendering must be done directly with engine.render() from @quillmark/wasm
-    
+
     const expectedWorkflow = [
       'Step 1: Import Quillmark from @quillmark/wasm and parse markdown with Quillmark.parseMarkdown()',
       'Step 2: Create engine and register quill with engine.registerQuill()',
