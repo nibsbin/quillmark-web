@@ -193,10 +193,10 @@ export interface QuillMetadata {
 
 **File: `package.json`**
 
-- [ ] Consider removing `@quillmark-test/wasm` from peerDependencies (now optional since loaders don't need it)
+- [ ] Consider removing `@quillmark/wasm` from peerDependencies (now optional since loaders don't need it)
 - [ ] Update version if needed
 
-**Note:** Since `loaders.fromZip()` only uses `fflate` and doesn't depend on WASM, the peer dependency on `@quillmark-test/wasm` is now truly optional. It's only needed if consumers want to use the `QuillJson` type returned by `fromZip()` with the WASM engine. Consider whether to keep it as a peer dependency or remove it entirely.
+**Note:** Since `loaders.fromZip()` only uses `fflate` and doesn't depend on WASM, the peer dependency on `@quillmark/wasm` is now truly optional. It's only needed if consumers want to use the `QuillJson` type returned by `fromZip()` with the WASM engine. Consider whether to keep it as a peer dependency or remove it entirely.
 
 ## Testing Strategy
 
@@ -293,7 +293,7 @@ All phases were implemented as planned:
 #### Phase 2.7: Update Package.json ✅
 - Bumped version to `3.0.0`
 - Updated description to "Utilities for loading Quillmark templates"
-- Made `@quillmark-test/wasm` an optional peer dependency via `peerDependenciesMeta`
+- Made `@quillmark/wasm` an optional peer dependency via `peerDependenciesMeta`
 
 ### Deviations from Plan
 
@@ -316,5 +316,5 @@ npm run build       # ✅ Full build including playground completes
 
 2. **Future considerations**:
    - The library is now very lightweight (~2.73 kB)
-   - `@quillmark-test/wasm` is optional - consumers only need it for rendering
+   - `@quillmark/wasm` is optional - consumers only need it for rendering
    - Consider adding more utility functions if needed

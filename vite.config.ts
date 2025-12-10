@@ -17,6 +17,6 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    exclude: ['@quillmark-test/wasm']
+    exclude: ['@quillmark/wasm']
   }
 });

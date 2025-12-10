@@ -2,7 +2,7 @@
 
 > Opinionated, convenient utilities for working with Quillmark in the browser.
 
-This library wraps `@quillmark-test/wasm` with high-level helpers for common frontend tasks while maintaining full access to the underlying WASM API.
+This library wraps `@quillmark/wasm` with high-level helpers for common frontend tasks while maintaining full access to the underlying WASM API.
 
 ## Features
 
@@ -16,7 +16,7 @@ This library wraps `@quillmark-test/wasm` with high-level helpers for common fro
 ## Installation
 
 ```bash
-npm install @quillmark-test/wasm @quillmark/web-utils
+npm install @quillmark/wasm @quillmark/web-utils
 ```
 
 ## Philosophy: Zip-Only Loading
@@ -109,7 +109,7 @@ async function exportMultipleFormats() {
 
 ### Quillmark Class
 
-The `Quillmark` class is re-exported directly from `@quillmark-test/wasm`. Use `new Quillmark()` to create instances:
+The `Quillmark` class is re-exported directly from `@quillmark/wasm`. Use `new Quillmark()` to create instances:
 
 ```typescript
 import { Quillmark } from '@quillmark/web-utils';

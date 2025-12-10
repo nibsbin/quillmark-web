@@ -19,14 +19,14 @@
  * 
  * v3.0.0 API Changes:
  * - @quillmark/web-utils is now a utils-only library (loaders + utils)
- * - Rendering must be done directly with @quillmark-test/wasm engine.render()
+ * - Rendering must be done directly with @quillmark/wasm engine.render()
  * - The exporters module has been removed
  */
 
 import { describe, it, expect } from 'vitest';
 
 // Note: In a proper browser environment or with WASM support, import like this:
-// import { Quillmark } from '@quillmark-test/wasm';
+// import { Quillmark } from '@quillmark/wasm';
 // import { loaders, utils } from '@quillmark/web-utils';
 
 // For now, we'll create a test suite that documents the expected behavior
@@ -42,7 +42,7 @@ describe('End-to-End Workflow Tests (following quillmark-wasm patterns)', () => 
       // This test validates the pattern from quillmark-wasm/basic.test.js
       // 
       // Expected behavior (v3.0.0):
-      // import { Quillmark } from '@quillmark-test/wasm';
+      // import { Quillmark } from '@quillmark/wasm';
       // const parsed = Quillmark.parseMarkdown(markdown);
       // 
       // Assertions:
@@ -64,7 +64,7 @@ describe('End-to-End Workflow Tests (following quillmark-wasm patterns)', () => 
   describe('Step 2: Register Quill', () => {
     it.skip('should create engine and register quill', () => {
       // Expected pattern from quillmark-wasm (v3.0.0):
-      // import { Quillmark } from '@quillmark-test/wasm';
+      // import { Quillmark } from '@quillmark/wasm';
       // const engine = new Quillmark();
       // engine.registerQuill(quillJson);
       // expect(engine.listQuills()).toContain('name');
@@ -93,7 +93,7 @@ describe('End-to-End Workflow Tests (following quillmark-wasm patterns)', () => 
   describe('Step 4: Render (using WASM directly)', () => {
     it.skip('should render to PDF format', () => {
       // v3.0.0 pattern (using WASM directly):
-      // import { Quillmark } from '@quillmark-test/wasm';
+      // import { Quillmark } from '@quillmark/wasm';
       // const parsed = Quillmark.parseMarkdown(markdown);
       // const result = engine.render(parsed, { format: 'pdf' });
       expect(skipReason).toBeDefined();
@@ -138,17 +138,17 @@ describe('End-to-End Workflow Tests (following quillmark-wasm patterns)', () => 
     // - @quillmark/web-utils is now a utils-only library
     // - loaders.fromZip() for loading quill templates
     // - utils.debounce() and utils.detectBinaryFile() for utilities
-    // - Rendering must be done directly with engine.render() from @quillmark-test/wasm
+    // - Rendering must be done directly with engine.render() from @quillmark/wasm
     
     const expectedWorkflow = [
-      'Step 1: Import Quillmark from @quillmark-test/wasm and parse markdown with Quillmark.parseMarkdown()',
+      'Step 1: Import Quillmark from @quillmark/wasm and parse markdown with Quillmark.parseMarkdown()',
       'Step 2: Create engine and register quill with engine.registerQuill()',
       'Step 3: Get quill info with engine.getQuillInfo()',
-      'Step 4: Render directly with engine.render(parsed, { format }) from @quillmark-test/wasm'
+      'Step 4: Render directly with engine.render(parsed, { format }) from @quillmark/wasm'
     ];
 
     expect(expectedWorkflow).toHaveLength(4);
-    expect(expectedWorkflow[0]).toContain('@quillmark-test/wasm');
+    expect(expectedWorkflow[0]).toContain('@quillmark/wasm');
     expect(expectedWorkflow[1]).toContain('register quill');
     expect(expectedWorkflow[2]).toContain('Get quill info');
     expect(expectedWorkflow[3]).toContain('engine.render');

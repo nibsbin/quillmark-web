@@ -58,7 +58,7 @@
     "@quillmark/wasm": ">=0.11.0"
   },
   "peerDependenciesMeta": {
-    "@quillmark-test/wasm": {
+    "@quillmark/wasm": {
       "optional": true
     }
   },

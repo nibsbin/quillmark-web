@@ -19,11 +19,11 @@ export default defineConfig({
     },
     rollupOptions: {
       // Externalize dependencies that shouldn't be bundled
-      external: ['@quillmark-test/wasm', 'fflate'],
+      external: ['@quillmark/wasm', 'fflate'],
       output: {
         // Provide global variables for UMD build (if needed later)
         globals: {
-          '@quillmark-test/wasm': 'QuillmarkWasm',
+          '@quillmark/wasm': 'QuillmarkWasm',
           'fflate': 'fflate'
         }
       }

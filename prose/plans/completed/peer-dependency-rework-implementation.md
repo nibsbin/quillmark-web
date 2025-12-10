@@ -2,18 +2,18 @@
 
 ## Overview
 
-This plan outlines the implementation steps to move `@quillmark-test/wasm` from a direct dependency to a peer dependency, as described in the design document [`peer-dependency-rework.md`](../designs/peer-dependency-rework.md).
+This plan outlines the implementation steps to move `@quillmark/wasm` from a direct dependency to a peer dependency, as described in the design document [`peer-dependency-rework.md`](../designs/peer-dependency-rework.md).
 
 ## Current State
 
-- `@quillmark-test/wasm` is a direct dependency in package.json
+- `@quillmark/wasm` is a direct dependency in package.json
 - `Quillmark` class is re-exported from index.ts
 - `render()` function takes a `Quillmark` instance and `markdown: string`
 - Consumer imports come from a single package
 
 ## Desired State
 
-- `@quillmark-test/wasm` is a peer dependency
+- `@quillmark/wasm` is a peer dependency
 - No WASM re-exports in index.ts
 - `render()` function takes a `QuillmarkEngine` interface and `ParsedDocument`
 - Consumer imports come from two packages
@@ -43,7 +43,7 @@ export interface QuillmarkEngine {
 
 **File: `src/lib/exporters.ts`**
 
-- [ ] Remove `import { Quillmark } from '@quillmark-test/wasm'`
+- [ ] Remove `import { Quillmark } from '@quillmark/wasm'`
 - [ ] Import `QuillmarkEngine` from `./types`
 - [ ] Update `render()` signature:
   - Change first parameter type from `Quillmark` to `QuillmarkEngine`
@@ -53,7 +53,7 @@ export interface QuillmarkEngine {
 
 **Before:**
 ```typescript
-import { Quillmark } from '@quillmark-test/wasm';
+import { Quillmark } from '@quillmark/wasm';
 
 export function render(
   engine: Quillmark,
@@ -83,17 +83,17 @@ export function render(
 
 **File: `src/lib/index.ts`**
 
-- [ ] Remove `export { Quillmark } from '@quillmark-test/wasm'`
+- [ ] Remove `export { Quillmark } from '@quillmark/wasm'`
 - [ ] Add `QuillmarkEngine` to type exports
 
 **Before:**
 ```typescript
-export { Quillmark } from '@quillmark-test/wasm';
+export { Quillmark } from '@quillmark/wasm';
 ```
 
 **After:**
 ```typescript
-// REMOVED: export { Quillmark } from '@quillmark-test/wasm';
+// REMOVED: export { Quillmark } from '@quillmark/wasm';
 
 export type {
   QuillJson,
@@ -106,7 +106,7 @@ export type {
 
 **File: `package.json`**
 
-- [ ] Move `@quillmark-test/wasm` from `dependencies` to `peerDependencies`
+- [ ] Move `@quillmark/wasm` from `dependencies` to `peerDependencies`
 - [ ] Set appropriate version constraint (`>=0.6.12`)
 - [ ] Add `peerDependenciesMeta` for optional warning control
 - [ ] Bump version to `2.0.0`
@@ -117,14 +117,14 @@ export type {
 - "version": "1.1.0",
 + "version": "2.0.0",
   "dependencies": {
--   "@quillmark-test/wasm": "^0.6.12",
+-   "@quillmark/wasm": "^0.6.12",
     "fflate": "^0.8.2"
   },
 + "peerDependencies": {
-+   "@quillmark-test/wasm": ">=0.6.12"
++   "@quillmark/wasm": ">=0.6.12"
 + },
   "devDependencies": {
-+   "@quillmark-test/wasm": "^0.6.12",
++   "@quillmark/wasm": "^0.6.12",
     // ... existing devDependencies
   }
 }
@@ -136,7 +136,7 @@ Note: Add to devDependencies so development/testing continues to work.
 
 **File: `src/main.ts` (playground)**
 
-- [ ] Update imports to source `Quillmark` from `@quillmark-test/wasm`
+- [ ] Update imports to source `Quillmark` from `@quillmark/wasm`
 - [ ] Update render calls to pre-parse markdown
 
 **Before:**
@@ -148,7 +148,7 @@ const result = exporters.render(engine, markdown, { format: 'pdf' });
 
 **After:**
 ```typescript
-import { Quillmark } from '@quillmark-test/wasm';
+import { Quillmark } from '@quillmark/wasm';
 import { loaders, exporters } from './lib';
 
 const parsed = Quillmark.parseMarkdown(markdown);
@@ -176,13 +176,13 @@ const result = exporters.render(engine, parsed, { format: 'pdf' });
 **Installation section:**
 
 ```bash
-npm install @quillmark/web-utils @quillmark-test/wasm
+npm install @quillmark/web-utils @quillmark/wasm
 ```
 
 **Example updates:**
 
 ```typescript
-import { Quillmark } from '@quillmark-test/wasm';
+import { Quillmark } from '@quillmark/wasm';
 import { loaders, exporters } from '@quillmark/web-utils';
 
 const engine = new Quillmark();
@@ -217,14 +217,14 @@ npm test            # All tests pass
 
 If issues arise:
 - Revert package.json version to 1.1.0
-- Re-add `@quillmark-test/wasm` to dependencies
+- Re-add `@quillmark/wasm` to dependencies
 - Restore `Quillmark` export in index.ts
 - Restore original `render()` signature
 
 ## Success Criteria
 
-- [ ] No `@quillmark-test/wasm` in `dependencies`
-- [ ] `@quillmark-test/wasm` in `peerDependencies` with `>=0.6.12`
+- [ ] No `@quillmark/wasm` in `dependencies`
+- [ ] `@quillmark/wasm` in `peerDependencies` with `>=0.6.12`
 - [ ] No `Quillmark` export from index.ts
 - [ ] `render()` accepts `QuillmarkEngine` and `ParsedDocument`
 - [ ] All tests pass

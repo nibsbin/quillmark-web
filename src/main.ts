@@ -1,4 +1,4 @@
-import { Quillmark } from '@quillmark-test/wasm';
+import { Quillmark } from '@quillmark/wasm';
 import {
   loaders,
   utils

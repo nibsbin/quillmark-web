@@ -2,7 +2,7 @@
 
 > Utilities for loading Quillmark templates in the browser
 
-Lightweight utility library for loading Quill templates from zip files. For rendering, use `@quillmark-test/wasm` directly.
+Lightweight utility library for loading Quill templates from zip files. For rendering, use `@quillmark/wasm` directly.
 
 ## Installation
 
@@ -10,14 +10,14 @@ Lightweight utility library for loading Quill templates from zip files. For rend
 npm install @quillmark/web-utils
 ```
 
-> **Note:** `@quillmark-test/wasm` is an optional peer dependency. Install it if you need rendering functionality.
+> **Note:** `@quillmark/wasm` is an optional peer dependency. Install it if you need rendering functionality.
 
 ## Quick Start
 
 ### Load and Render a Template
 
 ```typescript
-import { Quillmark } from '@quillmark-test/wasm';
+import { Quillmark } from '@quillmark/wasm';
 import { loaders } from '@quillmark/web-utils';
 
 // Load template from zip
@@ -46,7 +46,7 @@ URL.revokeObjectURL(url);
 ### Get SVG String
 
 ```typescript
-import { Quillmark } from '@quillmark-test/wasm';
+import { Quillmark } from '@quillmark/wasm';
 import { loaders } from '@quillmark/web-utils';
 
 // Setup
@@ -121,10 +121,10 @@ import type {
 
 ### Breaking Changes
 
-1. **`exporters` module removed** - Rendering helpers have been removed. Use `@quillmark-test/wasm` directly:
+1. **`exporters` module removed** - Rendering helpers have been removed. Use `@quillmark/wasm` directly:
    ```typescript
    // Before (v2.x)
-   import { Quillmark } from '@quillmark-test/wasm';
+   import { Quillmark } from '@quillmark/wasm';
    import { exporters } from '@quillmark/web-utils';
    
    const parsed = Quillmark.parseMarkdown(markdown);
@@ -132,7 +132,7 @@ import type {
    exporters.download(result, 'output.pdf');
    
    // After (v3.0.0)
-   import { Quillmark } from '@quillmark-test/wasm';
+   import { Quillmark } from '@quillmark/wasm';
    
    const parsed = Quillmark.parseMarkdown(markdown);
    const result = engine.render(parsed, { format: 'pdf' });
@@ -156,7 +156,7 @@ import type {
    - `Artifact`
    - `QuillmarkEngine`
 
-3. **`@quillmark-test/wasm` is now optional** - The library works standalone for loading templates. Install `@quillmark-test/wasm` only when you need rendering.
+3. **`@quillmark/wasm` is now optional** - The library works standalone for loading templates. Install `@quillmark/wasm` only when you need rendering.
 
 ### Migration Steps
 
@@ -190,7 +190,7 @@ When loaded via `fromZip()`, they become `QuillJson`:
 
 - Modern browsers with ES2020+ support
 - No polyfills required
-- WebAssembly support needed only for rendering (via `@quillmark-test/wasm`)
+- WebAssembly support needed only for rendering (via `@quillmark/wasm`)
 
 ## Playground
 
