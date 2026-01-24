@@ -74,7 +74,7 @@ Thank you for your interest in contributing to Quillmark Web! This document prov
  * 
  * @param zipFile - The zip file containing the Quill template
  * @returns Promise resolving to the Quill JSON contract
- * @throws Error if Quill.toml is not found in the zip
+ * @throws Error if Quill.yaml is not found in the zip
  */
 export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<QuillJson> {
   // Implementation...
@@ -167,9 +167,9 @@ Test in multiple browsers:
 Use clear, descriptive commit messages:
 
 ```
-Add fromZip validation for missing Quill.toml
+Add fromZip validation for missing Quill.yaml
 
-- Throw clear error when Quill.toml is not found
+- Throw clear error when Quill.yaml is not found
 - Add example error message to README
 - Update error handling documentation
 ```

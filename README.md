@@ -167,8 +167,7 @@ import type {
 
 ## Quill Template Format
 
-Templates are zip files containing:
-- `Quill.toml` - Template configuration
+Templates arThe zip file must contain `Quill.yaml` at the root level. configuration
 - `plate.typ` - Typst template
 - `assets/` - Fonts, images, etc.
 - `packages/` - Typst packages
@@ -177,7 +176,7 @@ When loaded via `fromZip()`, they become `QuillJson`:
 ```typescript
 {
   files: {
-    'Quill.toml': { contents: '...' },
+    'Quill.yaml': { contents: '...' },
     'plate.typ': { contents: '...' },
     'assets': {
       'font.otf': { contents: [137, 80, ...] }  // Binary as number array

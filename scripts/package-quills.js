@@ -40,9 +40,9 @@ async function packageQuill(quillName) {
     rawBuffers: true
   });
 
-  // Check if Quill.toml exists
-  if (!files['Quill.toml']) {
-    throw new Error(`Quill.toml not found in ${quillName}`);
+  // Check if Quill.yaml exists
+  if (!files['Quill.yaml']) {
+    throw new Error(`Quill.yaml not found in ${quillName}`);
   }
 
   // Create zip file

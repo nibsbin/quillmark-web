@@ -30,16 +30,25 @@ export function loadQuill(quillPath) {
  */
 export function loadQuillMarkdown(quillPath, markdownFile = null) {
   if (!markdownFile) {
-    // Try to parse Quill.toml to find example field
-    const tomlPath = path.join(quillPath, 'Quill.toml');
-    const tomlContent = fs.readFileSync(tomlPath, 'utf8');
-    
-    // Simple regex to extract example = "filename"
-    const match = tomlContent.match(/example\s*=\s*"([^"]+)"/);
-    if (match) {
-      markdownFile = match[1];
-    } else {
-      throw new Error('No markdown file specified and no example field found in Quill.toml');
+    // Try to parse Quill.yaml to find example field
+    const yamlPath = path.join(quillPath, 'Quill.yaml');
+
+    try {
+      const yamlContent = fs.readFileSync(yamlPath, 'utf8');
+
+      // Simple regex to extract example_file: "filename" or example_file: filename
+      // Handles both quoted and unquoted values
+      const match = yamlContent.match(/example_file\s*:\s*"?([^"\n]+)"?/);
+      if (match) {
+        markdownFile = match[1].trim();
+      } else {
+        throw new Error('No example_file field found in Quill.yaml');
+      }
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        throw new Error('Quill.yaml not found');
+      }
+      throw e;
     }
   }
 

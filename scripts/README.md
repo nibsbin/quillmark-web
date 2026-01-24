@@ -19,7 +19,7 @@ This script:
 
 ### Requirements
 
-- Each quill directory must contain a `Quill.toml` file at its root
+- Each quill directory must contain a `Quill.yaml` file at its root
 - The script uses `fflate` for zip compression (already a project dependency)
 
 ### When to Use

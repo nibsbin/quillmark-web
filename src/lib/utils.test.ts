@@ -25,7 +25,7 @@ describe('detectBinaryFile', () => {
 
   it('should not detect text files as binary', () => {
     expect(detectBinaryFile('plate.typ')).toBe(false);
-    expect(detectBinaryFile('Quill.toml')).toBe(false);
+    expect(detectBinaryFile('Quill.yaml')).toBe(false);
     expect(detectBinaryFile('README.md')).toBe(false);
     expect(detectBinaryFile('script.js')).toBe(false);
   });

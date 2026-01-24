@@ -26,7 +26,7 @@ This library takes an opinionated approach: **all Quills must be loaded from .zi
 - 📦 **Portability**: Quills are self-contained and easy to distribute
 - 🔒 **Security**: No directory traversal or file system concerns
 - 🎯 **Simplicity**: One clear way to load templates
-- ✅ **Validation**: Zip files are validated and must contain `Quill.toml`
+- ✅ **Validation**: Zip files are validated and must contain `Quill.yaml`
 
 ## Quick Start
 
@@ -135,7 +135,7 @@ Load a Quill from a .zip file. This is the **only** supported loading method.
 **Why zip-only?**
 - Ensures all Quills are packaged consistently
 - Simplifies distribution and sharing
-- Provides built-in validation (must contain Quill.toml)
+- Provides built-in validation (must contain Quill.yaml)
 - Eliminates security concerns with directory traversal
 
 #### `exporters`
@@ -191,7 +191,7 @@ cd your-quill-directory
 zip -r my-quill.zip . -x '*.git*' -x '.quillignore'
 ```
 
-The zip file must contain `Quill.toml` at the root level.
+The zip file must contain `Quill.yaml` at the root level.
 
 ## Testing
 

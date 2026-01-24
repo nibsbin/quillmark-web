@@ -13,7 +13,7 @@ describe('fromZip', () => {
     // Mock unzip to return a valid structure
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
-        'Quill.toml': new TextEncoder().encode('[quill]\nname = "test"'),
+        'Quill.yaml': new TextEncoder().encode('Quill:\n  name: "test"'),
         'plate.typ': new TextEncoder().encode('#let content = "test"'),
         'test.md': new TextEncoder().encode('# Test Document')
       });
@@ -23,10 +23,10 @@ describe('fromZip', () => {
     const result = await fromZip(zipBuffer);
 
     expect(result).toHaveProperty('files');
-    expect(result.files).toHaveProperty('Quill.toml');
-    expect(result.files['Quill.toml']).toHaveProperty('contents');
-    expect(typeof result.files['Quill.toml'].contents).toBe('string');
-    expect(result.files['Quill.toml'].contents).toContain('[quill]');
+    expect(result.files).toHaveProperty('Quill.yaml');
+    expect(result.files['Quill.yaml']).toHaveProperty('contents');
+    expect(typeof result.files['Quill.yaml'].contents).toBe('string');
+    expect(result.files['Quill.yaml'].contents).toContain('Quill:');
     expect(result.files).toHaveProperty('plate.typ');
     expect(result.files).toHaveProperty('test.md');
   });
@@ -35,7 +35,7 @@ describe('fromZip', () => {
     // Mock unzip with binary file
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
-        'Quill.toml': new TextEncoder().encode('[quill]'),
+        'Quill.yaml': new TextEncoder().encode('Quill:\n'),
         'logo.png': new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])
       });
     });
@@ -48,8 +48,8 @@ describe('fromZip', () => {
     expect(result.files['logo.png'].contents).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
   });
 
-  it('should reject zip without Quill.toml', async () => {
-    // Mock unzip without Quill.toml
+  it('should reject zip without Quill.yaml', async () => {
+    // Mock unzip without Quill.yaml
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
         'plate.typ': new TextEncoder().encode('#let content = "test"')
@@ -59,7 +59,7 @@ describe('fromZip', () => {
     const zipBuffer = new ArrayBuffer(100);
 
     await expect(fromZip(zipBuffer)).rejects.toThrow(
-      'Quill.toml not found in zip file'
+      'Quill.yaml not found in zip file'
     );
   });
 
@@ -67,7 +67,7 @@ describe('fromZip', () => {
     // Mock unzip with nested structure
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
-        'Quill.toml': new TextEncoder().encode('[quill]'),
+        'Quill.yaml': new TextEncoder().encode('Quill:\n'),
         'assets/logo.png': new Uint8Array([1, 2, 3]),
         'packages/my-pkg/lib.typ': new TextEncoder().encode('#let x = 1')
       });
@@ -98,7 +98,7 @@ describe('fromZip', () => {
     // Mock unzip with directory entry
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
-        'Quill.toml': new TextEncoder().encode('[quill]'),
+        'Quill.yaml': new TextEncoder().encode('Quill:\n'),
         'assets/': new Uint8Array([]), // Directory entry
         'assets/logo.png': new Uint8Array([1, 2, 3])
       });
@@ -107,17 +107,17 @@ describe('fromZip', () => {
     const zipBuffer = new ArrayBuffer(100);
     const result = await fromZip(zipBuffer);
 
-    expect(result.files).toHaveProperty('Quill.toml');
+    expect(result.files).toHaveProperty('Quill.yaml');
     expect(result.files.assets).toHaveProperty('logo.png');
     // Should not have the directory entry itself
     expect(result.files.assets).not.toHaveProperty('contents');
   });
 
-  it('should handle Quill.toml nested in a single top-level folder', async () => {
-    // Mock unzip with Quill.toml nested in a single folder
+  it('should handle Quill.yaml nested in a single top-level folder', async () => {
+    // Mock unzip with Quill.yaml nested in a single folder
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
-        'my-quill/Quill.toml': new TextEncoder().encode('[quill]\nname = "nested"'),
+        'my-quill/Quill.yaml': new TextEncoder().encode('Quill:\n  name: "nested"'),
         'my-quill/plate.typ': new TextEncoder().encode('#let content = "test"'),
         'my-quill/assets/logo.png': new Uint8Array([1, 2, 3])
       });
@@ -127,8 +127,8 @@ describe('fromZip', () => {
     const result = await fromZip(zipBuffer);
 
     // Files should be at root level (prefix stripped)
-    expect(result.files).toHaveProperty('Quill.toml');
-    expect(result.files['Quill.toml'].contents).toContain('[quill]');
+    expect(result.files).toHaveProperty('Quill.yaml');
+    expect(result.files['Quill.yaml'].contents).toContain('Quill:');
     expect(result.files).toHaveProperty('plate.typ');
     expect(result.files).toHaveProperty('assets');
     expect(result.files.assets).toHaveProperty('logo.png');
@@ -139,16 +139,16 @@ describe('fromZip', () => {
     (mockUnzip as any).mockImplementation((_data: any, callback: any) => {
       callback(null, {
         'folder1/file1.txt': new TextEncoder().encode('file1'),
-        'folder2/Quill.toml': new TextEncoder().encode('[quill]'),
+        'folder2/Quill.yaml': new TextEncoder().encode('Quill:\n'),
         'folder2/plate.typ': new TextEncoder().encode('#let x = 1')
       });
     });
 
     const zipBuffer = new ArrayBuffer(100);
 
-    // Should reject since Quill.toml is not at root and there are multiple top-level folders
+    // Should reject since Quill.yaml is not at root and there are multiple top-level folders
     await expect(fromZip(zipBuffer)).rejects.toThrow(
-      'Quill.toml not found in zip file'
+      'Quill.yaml not found in zip file'
     );
   });
 });

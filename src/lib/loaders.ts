@@ -14,9 +14,9 @@ import { extractZipFiles, buildFileTree } from './fileSources.js';
  * All Quill templates should be packaged as .zip files for consistent,
  * portable, and secure distribution.
  * 
- * @param zipFile - Zip file containing Quill template (must include Quill.toml at root)
+ * @param zipFile - Zip file containing Quill template (must include Quill.yaml at root)
  * @returns Quill JSON object ready for registerQuill()
- * @throws Error if zip is invalid or missing Quill.toml
+ * @throws Error if zip is invalid or missing Quill.yaml
  * 
  * @example
  * // Load from user upload
@@ -57,11 +57,11 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
         return;
       }
 
-      // Check if Quill.toml is nested inside a single top-level folder
+      // Check if Quill.yaml is nested inside a single top-level folder
       let pathPrefix = '';
-      const hasQuillTomlAtRoot = Object.keys(unzipped).some(path => path === 'Quill.toml' || path === 'Quill.toml/');
+      const hasQuillYamlAtRoot = Object.keys(unzipped).some(path => path === 'Quill.yaml' || path === 'Quill.yaml/');
 
-      if (!hasQuillTomlAtRoot) {
+      if (!hasQuillYamlAtRoot) {
         // Find all top-level entries (files and folders)
         const topLevelEntries = new Set<string>();
         for (const path of Object.keys(unzipped)) {
@@ -71,11 +71,11 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
           }
         }
 
-        // If there's only one top-level folder, check if it contains Quill.toml
+        // If there's only one top-level folder, check if it contains Quill.yaml
         if (topLevelEntries.size === 1) {
           const [topFolder] = Array.from(topLevelEntries);
-          const nestedQuillToml = `${topFolder}/Quill.toml`;
-          if (unzipped[nestedQuillToml]) {
+          const nestedQuillYaml = `${topFolder}/Quill.yaml`;
+          if (unzipped[nestedQuillYaml]) {
             pathPrefix = topFolder + '/';
           }
         }
@@ -89,9 +89,9 @@ export async function fromZip(zipFile: File | Blob | ArrayBuffer): Promise<Recor
         detectBinary: true
       });
 
-      // Validate that Quill.toml exists
-      if (!files['Quill.toml']) {
-        reject(new Error('Quill.toml not found in zip file. Make sure it exists at the root of the archive.'));
+      // Validate that Quill.yaml exists
+      if (!files['Quill.yaml']) {
+        reject(new Error('Quill.yaml not found in zip file. Make sure it exists at the root of the archive.'));
         return;
       }
 
