@@ -1,5 +1,5 @@
 ---
-QUILL: cmu_letter
+QUILL: cmu_letter:0.1
 department: Department Here
 address:
   - 5000 Forbes Avenue
@@ -8,12 +8,12 @@ url: cmu.edu
 
 date: 2025-11-30
 recipient:
-  - <<Dr. Heinz Doofenshmirtz>>
-  - <<9297 Polly Parkway>>
-  - <<City, Virginia 46231>>
+  - Dr. Heinz Doofenshmirtz
+  - 9297 Polly Parkway
+  - City, Virginia 46231
 signature_block:
-  - <<Phineas Flynn>>
-  - <<Masters Student>>
+  - Phineas Flynn
+  - Masters Student
 ---
 <!--
 In the data above, edit:
@@ -21,7 +21,7 @@ In the data above, edit:
 - Signature block
 -->
 
-Dear <<Dr. Heinz Doofenshmirtz>>,
+Dear {{Dr. Heinz Doofenshmirtz}},
 
 Write your letter content here. This template uses the CMU letter format for professional academic correspondence.
 

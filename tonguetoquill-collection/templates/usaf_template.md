@@ -1,5 +1,5 @@
 ---
-QUILL: usaf_memo
+QUILL: usaf_memo:0.1
 letterhead_title: DEPARTMENT OF THE AIR FORCE
 letterhead_caption: YOUR SQUADRON HERE
 memo_for:
@@ -12,8 +12,6 @@ signature_block:
   - FIRST M. LAST, Rank, USAF
 tag_line: Aim High
 ---
-
-Click "Wizard" to edit header, signature block, and more.
 
 Write your paragraphs here. Separate them with two new lines.
 

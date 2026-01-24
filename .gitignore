@@ -146,4 +146,16 @@ dist/
 
 public/quills/*
 
-src/tests/output/
+# Typst / build outputs
+*.zip
+release-artifacts/
+
+# Secrets and environment
+.env
+*.pem
+*.key
+
+outputs/
+
+MIGRATION.md
+references/
